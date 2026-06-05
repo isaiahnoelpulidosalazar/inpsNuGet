@@ -1,12 +1,12 @@
 # inpsNuGet
 
-**inpsNuGet** A NuGet package for .NET that simplifies validation through a custom Check class, a custom Convert class for data conversion, and a dedicated class that simplifies file IO through SimpleFileHandler.
+**inpsNuGet** is a NuGet package for .NET that simplifies validation through a custom Check class, a custom Convert class for data conversion, and a dedicated class that simplifies file IO through SimpleFileHandler.
 
 ---
 
 ## Features
 
-The package operates under the `nugetpackage` namespace and contains several distinct modules to help keep your codebase clean and readable:
+The package operates under the `inpsNuGet` namespace and contains several distinct modules to help keep your codebase clean and readable:
 
 ### Validation (`Check`)
 A robust validation class to simplify standard string, format, and date checks.
@@ -60,7 +60,7 @@ Install-Package inpsNuGet
 
 To use the package, simply include the namespace at the top of your file:
 ```csharp
-using nugetpackage;
+using inpsNuGet;
 ```
 
 ### 1. Validating Phone Numbers & Dates (`Check`)
