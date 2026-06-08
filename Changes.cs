@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update solution file
+    // - add Text class
 }
