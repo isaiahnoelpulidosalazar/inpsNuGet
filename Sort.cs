@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace inpsNuGet;
 
-public class SortAlgorithms
+public class Sort
 {
     public static int[] BubbleSort(int[] arr)
     {
