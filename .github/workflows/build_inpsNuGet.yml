@@ -23,7 +23,9 @@ jobs:
       - name: Get Version and Changes
         id: metadata
         run: |
-          VERSION=$(grep -m 1 "<Version>" inpsNuGet.csproj | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
+          PROJECT=$(find . -path "./inpsNuGetTest" -prune -o -name "*.csproj" -print | head -n 1)
+
+          VERSION=$(grep -m 1 "<Version>" "$PROJECT" | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
 
           CHANGES=$(awk '
             BEGIN { found=0 }
@@ -48,9 +50,11 @@ jobs:
 
       - name: Build and Pack
         run: |
-          dotnet restore inpsNuGet.csproj
-          dotnet build inpsNuGet.csproj --configuration Release --no-restore
-          dotnet pack inpsNuGet.csproj --configuration Release --no-build --output nuget/artifacts
+          PROJECT=$(find . -path "./inpsNuGetTest" -prune -o -name "*.csproj" -print | head -n 1)
+
+          dotnet restore "$PROJECT"
+          dotnet build "$PROJECT" --configuration Release --no-restore
+          dotnet pack "$PROJECT" --configuration Release --no-build --output nuget/artifacts
 
       - name: Check if tag exists
         id: tag_check
