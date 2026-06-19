@@ -27,9 +27,10 @@ public class SimpleFileHandler
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(FileName));
             }
-            FileStream ProjectFileStream = File.Create(FileName);
-            ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
-            ProjectFileStream.Close();
+            using (FileStream ProjectFileStream = File.Create(FileName))
+            {
+                ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
+            }
         }
         catch
         {
@@ -45,9 +46,10 @@ public class SimpleFileHandler
             {
                 Directory.CreateDirectory(FilePath);
             }
-            FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, Path.GetFileName(FileName)));
-            ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
-            ProjectFileStream.Close();
+            using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, Path.GetFileName(FileName))))
+            {
+                ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
+            }
         }
         catch
         {

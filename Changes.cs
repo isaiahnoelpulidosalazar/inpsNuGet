@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add Text class
+    // - fix a bug in ProjectToLocation where file stream remains locked
 }
