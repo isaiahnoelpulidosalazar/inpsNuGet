@@ -44,7 +44,7 @@ namespace inpsNuGetTest
         public void BeadSort_NegativeValue_ThrowsArgumentException()
         {
             // Assert that BeadSort throws an exception when encountering a negative value.
-            Assert.Throws<ArgumentException>(() => Sort.BeadSort(new[] { 3, -1, 4 }));
+            Assert.Throws<ArgumentException>(() => Sort.BeadSort([3, -1, 4]));
         }
 
         #endregion
@@ -55,8 +55,8 @@ namespace inpsNuGetTest
         public void BogoSort_SmallArray_SortsCorrectly()
         {
             // BogoSort has O(N!) average complexity. Testing with 3 or fewer elements avoids long test times.
-            Assert.Equal(new[] { 1, 2, 3 }, Sort.BogoSort(new[] { 3, 1, 2 }));
-            Assert.Equal(new[] { 5 }, Sort.BogoSort(new[] { 5 }));
+            Assert.Equal([1, 2, 3], Sort.BogoSort([3, 1, 2]));
+            Assert.Equal([5], Sort.BogoSort([5]));
             Assert.Empty(Sort.BogoSort(Array.Empty<int>()));
         }
 
@@ -85,19 +85,19 @@ namespace inpsNuGetTest
         private void VerifySortAlgorithm(Func<int[], int[]> sortFunc, bool allowNegative = true)
         {
             // 1. Standard Case
-            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, sortFunc(new[] { 5, 3, 4, 1, 2 }));
+            Assert.Equal([1, 2, 3, 4, 5], sortFunc([5, 3, 4, 1, 2]));
 
             // 2. Already Sorted
-            Assert.Equal(new[] { 10, 20, 30 }, sortFunc(new[] { 10, 20, 30 }));
+            Assert.Equal([10, 20, 30], sortFunc([10, 20, 30]));
 
             // 3. Reversed Array (Changed to positive numbers)
-            Assert.Equal(new[] { 1, 2, 3 }, sortFunc(new[] { 3, 2, 1 }));
+            Assert.Equal([1, 2, 3], sortFunc([3, 2, 1]));
 
             // 4. Duplicates
-            Assert.Equal(new[] { 2, 2, 3, 3, 5 }, sortFunc(new[] { 3, 2, 5, 2, 3 }));
+            Assert.Equal([2, 2, 3, 3, 5], sortFunc([3, 2, 5, 2, 3]));
 
             // 5. Single Element
-            Assert.Equal(new[] { 42 }, sortFunc(new[] { 42 }));
+            Assert.Equal([42], sortFunc([42]));
 
             // 6. Empty Array
             Assert.Empty(sortFunc(Array.Empty<int>()));
@@ -105,7 +105,7 @@ namespace inpsNuGetTest
             // 7. Negative Numbers (Only evaluated if algorithm supports it)
             if (allowNegative)
             {
-                Assert.Equal(new[] { -20, -10, 0, 10 }, sortFunc(new[] { 10, -10, 0, -20 }));
+                Assert.Equal([-20, -10, 0, 10], sortFunc([10, -10, 0, -20]));
             }
         }
 
