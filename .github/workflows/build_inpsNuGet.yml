@@ -82,6 +82,7 @@ jobs:
 
       - name: Publish package
         if: steps.tag_check.outputs.exists == 'false'
+        shell: bash
         run: |
           dotnet nuget push "nuget/artifacts/*.nupkg" \
             --api-key ${{ secrets.NUGET_API_KEY }} \
