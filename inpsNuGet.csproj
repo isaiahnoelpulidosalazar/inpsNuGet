@@ -6,9 +6,10 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>inpsNuGet</PackageId>
-    <Version>1.0.7</Version>
+    <Version>1.0.6</Version>
     <Authors>Isaiah Noel Pulido Salazar</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d+\.\d+-windows'))">
