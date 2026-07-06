@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repo
@@ -22,6 +22,7 @@ jobs:
 
       - name: Get Version and Changes
         id: metadata
+        shell: bash
         run: |
           VERSION=$(grep -m 1 "<Version>" inpsNuGet.csproj | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
 
@@ -54,6 +55,7 @@ jobs:
 
       - name: Check if tag exists
         id: tag_check
+        shell: bash
         run: |
           if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
             echo "exists=true" >> $GITHUB_OUTPUT
