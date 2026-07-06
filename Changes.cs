@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - test VerticalFlowLayoutPanel
+    // - update inpsNuGet to target net8.0 and net8.0-windows
 }
