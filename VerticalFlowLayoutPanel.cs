@@ -1,3 +1,4 @@
+#if Windows
 using System.ComponentModel;
 using System.Windows.Forms;
 
@@ -16,3 +17,4 @@ public class VerticalFlowLayoutPanel : FlowLayoutPanel
         }
     }
 }
+#endif
