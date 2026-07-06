@@ -23,6 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="inpsNuGetTestForm/**/*" />
+    <EmbeddedResource Remove="inpsNuGetTestForm/**/*" />
+    <None Remove="inpsNuGetTestForm/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
