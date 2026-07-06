@@ -84,7 +84,9 @@ jobs:
         if: steps.tag_check.outputs.exists == 'false'
         shell: bash
         run: |
-          dotnet nuget push "nuget/artifacts/*.nupkg" \
+          ls -l nuget/artifacts/
+          
+          dotnet nuget push nuget/artifacts/*.nupkg \
             --api-key ${{ secrets.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
