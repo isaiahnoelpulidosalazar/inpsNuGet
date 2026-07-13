@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - test fix for SSL/TLS verification issues when installing pip using get-pip.py
+    // - fix UTF-8 BOM issue in python313._pth file
 }

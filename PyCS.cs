@@ -92,12 +92,23 @@ public class PyCS
                 }
                 try
                 {
+                    try
+                    {
+                        if (Directory.Exists(PythonDir))
+                        {
+                            Directory.Delete(PythonDir, true);
+                        }
+                    }
+                    catch
+                    {
+                    }
+
                     Directory.CreateDirectory(PythonDir);
                     ZipFile.ExtractToDirectory(PythonZip, PythonDir);
 
                     string pthPath = Path.Combine(PythonDir, "python313._pth");
                     string pthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
-                    File.WriteAllText(pthPath, pthContent, Encoding.UTF8);
+                    File.WriteAllText(pthPath, pthContent, new UTF8Encoding(false));
 
                     string nestedZip = Path.Combine(PythonDir, "python313.zip");
                     ZipFile.ExtractToDirectory(nestedZip, nestedExtractPath);
