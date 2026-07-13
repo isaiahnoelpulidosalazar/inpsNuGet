@@ -51,7 +51,7 @@ public class PyCS
             }
             try
             {
-                using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CSSimpleFunctions.python-3.13.5-embed-amd64.zip"))
+                using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.python-3.13.5-embed-amd64.zip"))
                 {
                     if (resourceStream == null)
                     {
@@ -111,7 +111,7 @@ public class PyCS
                     string nestedZip = Path.Combine(PythonDir, "python313.zip");
                     ZipFile.ExtractToDirectory(nestedZip, nestedExtractPath);
 
-                    using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CSSimpleFunctions.sitecustomize.py"))
+                    using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.sitecustomize.py"))
                     {
                         if (resourceStream != null)
                         {
