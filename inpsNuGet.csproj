@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>inpsNuGet</PackageId>
-    <Version>1.0.6</Version>
+    <Version>1.1.0</Version>
     <Authors>Isaiah Noel Pulido Salazar</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
@@ -32,4 +32,9 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="LICENSE" />
+    <EmbeddedResource Include="python-3.13.5-embed-amd64.zip" />
+    <EmbeddedResource Include="sitecustomize.py" />
+  </ItemGroup>
 </Project>
