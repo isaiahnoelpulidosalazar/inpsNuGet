@@ -10,7 +10,7 @@ public class SimpleFileHandler
     {
         File.WriteAllText(FilePath, Content);
     }
-    
+
     public static string Read(string FilePath)
     {
         return File.ReadAllText(FilePath);
@@ -26,18 +26,31 @@ public class SimpleFileHandler
     {
         try
         {
-            if (!Path.GetDirectoryName(FileName).Equals(string.Empty) && !Directory.Exists(Path.GetDirectoryName(FileName)))
+            string shortFileName = Path.GetFileName(FileName);
+            string actualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + shortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (actualResourceName == null)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(FileName));
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{shortFileName}'");
             }
-            using (FileStream ProjectFileStream = File.Create(FileName))
+
+            string directory = Path.GetDirectoryName(FileName);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
-                ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
+                Directory.CreateDirectory(directory);
+            }
+
+            using (Stream resourceStream = ExecutingAssembly.GetManifestResourceStream(actualResourceName))
+            {
+                using (FileStream projectFileStream = File.Create(FileName))
+                {
+                    resourceStream.CopyTo(projectFileStream);
+                }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine("Cannot copy project file. Please make sure the file's build action is set to 'Embedded Resource'.");
+            Console.WriteLine($"Cannot copy project file. Error: {ex.Message}");
         }
     }
 

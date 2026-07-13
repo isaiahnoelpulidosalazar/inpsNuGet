@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>inpsNuGet</PackageId>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <Authors>Isaiah Noel Pulido Salazar</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
@@ -26,6 +26,12 @@
     <Compile Remove="inpsNuGetTestForm/**/*" />
     <EmbeddedResource Remove="inpsNuGetTestForm/**/*" />
     <None Remove="inpsNuGetTestForm/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="inpsNuGetTestConsole/**/*" />
+    <EmbeddedResource Remove="inpsNuGetTestConsole/**/*" />
+    <None Remove="inpsNuGetTestConsole/**/*" />
   </ItemGroup>
 
   <ItemGroup>
