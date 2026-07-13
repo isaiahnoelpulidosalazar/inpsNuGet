@@ -10,14 +10,17 @@ public class SimpleFileHandler
     {
         File.WriteAllText(FilePath, Content);
     }
+    
     public static string Read(string FilePath)
     {
         return File.ReadAllText(FilePath);
     }
+
     public static void Append(string FilePath, string Content)
     {
         File.AppendAllText(FilePath, Content);
     }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ProjectToLocation(Assembly ExecutingAssembly, string FileName)
     {
@@ -37,6 +40,7 @@ public class SimpleFileHandler
             Console.WriteLine("Cannot copy project file. Please make sure the file's build action is set to 'Embedded Resource'.");
         }
     }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ProjectToLocation(Assembly ExecutingAssembly, string FileName, string FilePath)
     {

@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - change namespace for PyCS
+    // - optimize PyCS by unifying process handling using a centralized RunProcess
 }
