@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - embed get-pip.py
+    // - test fix for SSL/TLS verification issues when installing pip using get-pip.py
 }

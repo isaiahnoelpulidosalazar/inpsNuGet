@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace inpsNuGet;
 
@@ -183,19 +184,22 @@ public class PyCS
             {
                 if (_showConsole)
                 {
-                    Console.WriteLine("Installing pip (requires internet access for the Python process)...");
+                    Console.WriteLine("Installing pip...");
                 }
 
                 try
                 {
-                    string output = RunProcess(PythonExe, GetPipScript);
+                    string getPipArguments = $"\"{GetPipScript}\" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
+                    string output = RunProcess(PythonExe, getPipArguments);
+                    
                     if (!string.IsNullOrWhiteSpace(output))
                     {
-                        Console.WriteLine("pip installation completed.");
+                        Console.WriteLine("pip installation log:");
+                        Console.WriteLine(output);
                     }
                     else
                     {
-                        Console.WriteLine("Failed to install pip. (The execution of get-pip.py still needs internet access to fetch pip wheels).");
+                        Console.WriteLine("Failed to install pip. Empty output from get-pip process.");
                     }
                 }
                 catch (Exception ex)
@@ -215,7 +219,7 @@ public class PyCS
 
     public void Pip(string[] args)
     {
-        string arguments = "install " + string.Join(" ", args);
+        string arguments = "install " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
         string output = RunProcess(PipExe, arguments);
         if (_showConsole)
         {
@@ -225,7 +229,7 @@ public class PyCS
 
     public void PipUpgrade(string[] args)
     {
-        string arguments = "install --upgrade " + string.Join(" ", args);
+        string arguments = "install --upgrade " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
         string output = RunProcess(PipExe, arguments);
         if (_showConsole)
         {
@@ -299,6 +303,7 @@ public class PyCS
                 Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = _showConsole
             };
 
@@ -310,8 +315,21 @@ public class PyCS
             try
             {
                 proc.Start();
-                string output = proc.StandardOutput.ReadToEnd();
+                
+                var outTask = proc.StandardOutput.ReadToEndAsync();
+                var errTask = proc.StandardError.ReadToEndAsync();
+                
                 proc.WaitForExit();
+                
+                Task.WaitAll(outTask, errTask);
+
+                string output = outTask.Result;
+                string error = errTask.Result;
+
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    return $"{output}{Environment.NewLine}Error Output:{Environment.NewLine}{error}";
+                }
                 return output;
             }
             catch (Exception ex)
