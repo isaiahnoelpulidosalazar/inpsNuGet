@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
 
@@ -151,11 +150,17 @@ public class PyCS
                     Console.WriteLine("Downloading get-pip...");
                 }
 
-                using (var httpClient = new HttpClient())
+                var webReq = (HttpWebRequest)WebRequest.Create("https://bootstrap.pypa.io/get-pip.py");
+                webReq.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+
+                using (var res = webReq.GetResponse())
+                using (var content = res.GetResponseStream())
                 {
-                    byte[] data = httpClient.GetByteArrayAsync("https://bootstrap.pypa.io/get-pip.py").GetAwaiter().GetResult();
                     Directory.CreateDirectory(PythonDir);
-                    File.WriteAllBytes(GetPipScript, data);
+                    using (var fileStream = File.Create(GetPipScript))
+                    {
+                        content.CopyTo(fileStream);
+                    }
                 }
             }
             else
