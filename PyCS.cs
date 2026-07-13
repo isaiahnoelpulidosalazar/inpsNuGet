@@ -4,7 +4,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 
-namespace CSSimpleFunctions;
+namespace inpsNuGet;
 
 public class PyCS
 {
@@ -322,7 +322,7 @@ public class PyCS
         StreamReader reader = process.StandardOutput;
         return reader.ReadToEnd();
     }
-    
+
     public string GetFileOutput(string filePath)
     {
         ProcessStartInfo run0 = new ProcessStartInfo();

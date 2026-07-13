@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add PyCS
+    // - change namespace for PyCS
 }
