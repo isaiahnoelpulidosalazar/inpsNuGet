@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>inpsNuGet</PackageId>
-    <Version>1.1.8</Version>
+    <Version>1.1.9</Version>
     <Authors>Isaiah Noel Pulido Salazar</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

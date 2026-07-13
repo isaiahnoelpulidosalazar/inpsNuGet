@@ -151,4 +151,41 @@ public class Check
     {
         return (until - now).TotalDays;
     }
+
+    public static readonly HttpClient client = new HttpClient
+    {
+        Timeout = TimeSpan.FromSeconds(5)
+    };
+
+    // How to use: CheckConnectionAsync().GetAwaiter().GetResult();
+    // Note: will eventually rewrite this function in the future but
+    //       not right now because i am bored
+    public static async Task CheckConnectionAsync()
+    {
+        try
+        {
+            var response = await client.GetAsync("http://clients3.google.com/generate_204");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("You have a working internet connection.");
+            }
+            else
+            {
+                Console.WriteLine("No internet access (Server returned an error status).");
+            }
+        }
+        catch (HttpRequestException)
+        {
+            Console.WriteLine("No internet access (Failed to reach the test server).");
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("No internet access (Connection timed out).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+        }
+    }
 }
