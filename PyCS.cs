@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Reflection;
 using System.Text;
 
@@ -32,16 +31,8 @@ public class PyCS
         CreatePython();
     }
 
-    private void AllowTLS12()
-    {
-        ServicePointManager.Expect100Continue = true;
-        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-    }
-
     private void CreatePython()
     {
-        AllowTLS12();
-
         if (!File.Exists(PythonZip))
         {
             if (_showConsole)
@@ -147,19 +138,20 @@ public class PyCS
             {
                 if (_showConsole)
                 {
-                    Console.WriteLine("Downloading get-pip...");
+                    Console.WriteLine("Extracting get-pip.py from resources...");
                 }
 
-                var webReq = (HttpWebRequest)WebRequest.Create("https://bootstrap.pypa.io/get-pip.py");
-                webReq.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
-
-                using (var res = webReq.GetResponse())
-                using (var content = res.GetResponseStream())
+                using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.get-pip.py"))
                 {
+                    if (resourceStream == null)
+                    {
+                        throw new FileNotFoundException("Embedded get-pip.py resource not found.");
+                    }
+
                     Directory.CreateDirectory(PythonDir);
                     using (var fileStream = File.Create(GetPipScript))
                     {
-                        content.CopyTo(fileStream);
+                        resourceStream.CopyTo(fileStream);
                     }
                 }
             }
@@ -167,13 +159,13 @@ public class PyCS
             {
                 if (_showConsole)
                 {
-                    Console.WriteLine("get-pip already downloaded.");
+                    Console.WriteLine("get-pip.py already extracted.");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to download get-pip: {ex.Message}. Connect to the internet to download get-pip.");
+            Console.WriteLine($"Failed to extract get-pip: {ex.Message}. Make sure get-pip.py is set to 'Embedded Resource' in your project.");
         }
 
         bool getPipExists = File.Exists(GetPipScript);
@@ -191,7 +183,7 @@ public class PyCS
             {
                 if (_showConsole)
                 {
-                    Console.WriteLine("Downloading pip...");
+                    Console.WriteLine("Installing pip (requires internet access for the Python process)...");
                 }
 
                 try
@@ -199,23 +191,23 @@ public class PyCS
                     string output = RunProcess(PythonExe, GetPipScript);
                     if (!string.IsNullOrWhiteSpace(output))
                     {
-                        Console.WriteLine("pip downloaded.");
+                        Console.WriteLine("pip installation completed.");
                     }
                     else
                     {
-                        Console.WriteLine("Failed to download pip. Connect to the internet to download pip.");
+                        Console.WriteLine("Failed to install pip. (The execution of get-pip.py still needs internet access to fetch pip wheels).");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to download pip: {ex.Message}");
+                    Console.WriteLine($"Failed to run pip installation: {ex.Message}");
                 }
             }
             else
             {
                 if (_showConsole)
                 {
-                    Console.WriteLine("pip already downloaded.");
+                    Console.WriteLine("pip already installed.");
                 }
             }
         }
