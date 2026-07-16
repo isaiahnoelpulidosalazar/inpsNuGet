@@ -152,15 +152,12 @@ public class Check
         return (until - now).TotalDays;
     }
 
-    public static readonly HttpClient client = new HttpClient
+    static readonly HttpClient client = new HttpClient
     {
         Timeout = TimeSpan.FromSeconds(5)
     };
 
-    // How to use: CheckConnectionAsync().GetAwaiter().GetResult();
-    // Note: will eventually rewrite this function in the future but
-    //       not right now because i am bored
-    public static async Task CheckConnectionAsync()
+    static async Task CheckConnectionAsync()
     {
         try
         {
@@ -187,5 +184,10 @@ public class Check
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
+    }
+
+    public static void CheckConnection()
+    {
+        CheckConnectionAsync().GetAwaiter().GetResult();
     }
 }
