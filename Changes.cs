@@ -3,5 +3,5 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - rewrite CheckConnection
+    // - update PyCS file extraction
 }
