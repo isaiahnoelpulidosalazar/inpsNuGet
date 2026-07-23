@@ -2,8 +2,8 @@ using System.ComponentModel;
 
 namespace inpsNuGet;
 
+#if WINDOWS
 [ToolboxItem(true)]
-#if Windows
 public class VerticalFlowLayoutPanel : FlowLayoutPanel
 {
     protected override System.Windows.Forms.CreateParams CreateParams
