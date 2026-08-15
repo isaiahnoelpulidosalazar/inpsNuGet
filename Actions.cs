@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace inpsNuGet;
+
 public class Actions
 {
     private readonly Action Action;
