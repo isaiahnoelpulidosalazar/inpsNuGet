@@ -6,7 +6,7 @@ namespace inpsNuGet;
 
 public class Actions
 {
-    private readonly Action Action;
+    readonly Action Action;
     public Task RunningTask { get; private set; }
     public bool IsRunning => RunningTask != null && !RunningTask.IsCompleted;
 
@@ -23,11 +23,11 @@ public class Actions
 
     public Actions RunOnDedicatedThread(bool DoInBackground = true)
     {
-        var thread = new Thread(new ThreadStart(Action))
+        var Thread = new Thread(new ThreadStart(Action))
         {
             IsBackground = DoInBackground
         };
-        thread.Start();
+        Thread.Start();
         return this;
     }
 }

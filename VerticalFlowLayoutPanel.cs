@@ -17,7 +17,5 @@ public class VerticalFlowLayoutPanel : FlowLayoutPanel
     }
 }
 #else
-public class VerticalFlowLayoutPanel
-{
-}
+public class VerticalFlowLayoutPanel { }
 #endif

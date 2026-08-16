@@ -2,8 +2,8 @@ namespace inpsNuGet;
 
 public class Text
 {
-    public static string GetTextFromDoubleQuotations(string line)
+    public static string GetTextFromDoubleQuotations(string Line)
     {
-        return line.Substring(line.IndexOf('"') + 1, line.LastIndexOf('"') - line.IndexOf('"') - 1);
+        return Line.Substring(Line.IndexOf('"') + 1, Line.LastIndexOf('"') - Line.IndexOf('"') - 1);
     }
 }

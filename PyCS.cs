@@ -8,28 +8,30 @@ using System.Threading.Tasks;
 
 namespace inpsNuGet;
 
+#if WINDOWS
 public class PyCS
 {
-    private readonly bool _showConsole = true;
-    private readonly object _processLock = new();
-    private Process? _currentProcess;
+    readonly bool ShowConsole = true;
+    readonly object ProcessLock = new();
+    Process? CurrentProcess;
 
-    private static readonly string PythonZip = "python-3.13.5-embed-amd64.zip";
-    private static readonly string PyFilesZip = "py_files.zip";
-    private static readonly string PythonDir = "python3_13";
-    private static readonly string PythonExe = Path.Combine(PythonDir, "python.exe");
-    private static readonly string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
-    private static readonly string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
-    private static readonly string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
-    private static readonly string MainPy = Path.Combine(PythonDir, "main.py");
+    const string PythonVersionShort = "Python 3.13";
+    const string PythonVersionFull = "Python 3.13.5";
+    const string PythonVersionFileSafe = "python-3.13.5";
+    static readonly string PythonZip = $"{PythonVersionFileSafe}-embed-amd64.zip";
+    const string PyFilesZip = "py_files.zip";
+    const string PythonDir = "python3_13";
+    static readonly string PythonExe = Path.Combine(PythonDir, "python.exe");
+    static readonly string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
+    static readonly string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
+    static readonly string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
+    static readonly string MainPy = Path.Combine(PythonDir, "main.py");
 
-    public PyCS() : this(true)
-    {
-    }
+    public PyCS() : this(true) { }
 
     public PyCS(bool console)
     {
-        _showConsole = console;
+        ShowConsole = console;
         CreatePython();
     }
 
@@ -37,28 +39,28 @@ public class PyCS
     {
         if (!File.Exists(PythonZip))
         {
-            if (_showConsole)
+            if (ShowConsole)
             {
-                Console.WriteLine("Creating Python 3.13 resources...");
+                Console.WriteLine($"Creating {PythonVersionShort} resources...");
             }
             try
             {
-                using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.python-3.13.5-embed-amd64.zip"))
+                using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"inpsNuGet.{PythonVersionFileSafe}-embed-amd64.zip"))
                 {
-                    if (resourceStream == null)
+                    if (ResourceStream == null)
                     {
                         throw new FileNotFoundException("Embedded Python ZIP resource not found.");
                     }
 
-                    using (var fileStream = File.Create(PythonZip))
+                    using (var FileStream = File.Create(PythonZip))
                     {
-                        resourceStream.CopyTo(fileStream);
+                        ResourceStream.CopyTo(FileStream);
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"Failed to create Python 3.13 resources: {ex.Message}");
+                Console.WriteLine($"Failed to create {PythonVersionShort} resources: {e.Message}");
             }
         }
 
@@ -66,46 +68,44 @@ public class PyCS
         {
             try
             {
-                using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
+                using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
                 {
-                    if (resourceStream == null)
+                    if (ResourceStream == null)
                     {
                         throw new FileNotFoundException("Embedded py_files.zip resource not found.");
                     }
 
-                    using (var fileStream = File.Create(PyFilesZip))
+                    using (var FileStream = File.Create(PyFilesZip))
                     {
-                        resourceStream.CopyTo(fileStream);
+                        ResourceStream.CopyTo(FileStream);
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"Failed to write py_files.zip: {ex.Message}");
+                Console.WriteLine($"Failed to write py_files.zip: {e.Message}");
             }
         }
 
-        bool zipReadable = false;
+        bool ZipReadable = false;
         try
         {
             if (File.Exists(PythonZip))
             {
                 using (File.OpenRead(PythonZip)) { }
-                zipReadable = true;
+                ZipReadable = true;
             }
         }
-        catch
-        {
-        }
+        catch { }
 
-        if (zipReadable)
+        if (ZipReadable)
         {
-            string nestedExtractPath = Path.Combine(PythonDir, "python313");
-            if (!Directory.Exists(nestedExtractPath))
+            string NestedExtractPath = Path.Combine(PythonDir, "python313");
+            if (!Directory.Exists(NestedExtractPath))
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
-                    Console.WriteLine("Extracting Python 3.13 resources...");
+                    Console.WriteLine($"Extracting {PythonVersionShort} resources...");
                 }
                 try
                 {
@@ -116,39 +116,37 @@ public class PyCS
                             Directory.Delete(PythonDir, true);
                         }
                     }
-                    catch
-                    {
-                    }
+                    catch { }
 
                     Directory.CreateDirectory(PythonDir);
                     
                     ExtractZipSafe(PythonZip, PythonDir);
 
-                    string pthPath = Path.Combine(PythonDir, "python313._pth");
-                    string pthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
-                    File.WriteAllText(pthPath, pthContent, new UTF8Encoding(false));
+                    string PthPath = Path.Combine(PythonDir, "python313._pth");
+                    string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
+                    File.WriteAllText(PthPath, PthContent, new UTF8Encoding(false));
 
-                    string nestedZip = Path.Combine(PythonDir, "python313.zip");
-                    ExtractZipSafe(nestedZip, nestedExtractPath);
+                    string NestedZip = Path.Combine(PythonDir, "python313.zip");
+                    ExtractZipSafe(NestedZip, NestedExtractPath);
 
                     if (File.Exists(PyFilesZip))
                     {
                         ExtractZipSafe(PyFilesZip, PythonDir);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    if (_showConsole)
+                    if (ShowConsole)
                     {
-                        Console.WriteLine($"Failed to extract Python 3.13 resources: {ex.Message}");
+                        Console.WriteLine($"Failed to extract {PythonVersionShort} resources: {e.Message}");
                     }
                 }
             }
             else
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
-                    Console.WriteLine("Python 3.13 resources already extracted.");
+                    Console.WriteLine($"{PythonVersionShort} resources already extracted.");
                 }
             }
         }
@@ -160,23 +158,23 @@ public class PyCS
         {
             if (!File.Exists(GetPipScript) || !File.Exists(SiteCustomize))
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
                     Console.WriteLine("Extracting helper files from py_files.zip...");
                 }
 
                 if (!File.Exists(PyFilesZip))
                 {
-                    using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
+                    using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
                     {
-                        if (resourceStream == null)
+                        if (ResourceStream == null)
                         {
                             throw new FileNotFoundException("Embedded py_files.zip resource not found.");
                         }
 
-                        using (var fileStream = File.Create(PyFilesZip))
+                        using (var FileStream = File.Create(PyFilesZip))
                         {
-                            resourceStream.CopyTo(fileStream);
+                            ResourceStream.CopyTo(FileStream);
                         }
                     }
                 }
@@ -186,58 +184,58 @@ public class PyCS
             }
             else
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
                     Console.WriteLine("Helper files already extracted.");
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Console.WriteLine($"Failed to extract helper files: {ex.Message}. Make sure py_files.zip is set to 'Embedded Resource' in your project.");
+            Console.WriteLine($"Failed to extract helper files: {e.Message}. Make sure py_files.zip is set to 'Embedded Resource' in your project.");
         }
 
-        bool getPipExists = File.Exists(GetPipScript);
-        bool siteCustomizeExists = File.Exists(SiteCustomize);
+        bool GetPipExists = File.Exists(GetPipScript);
+        bool SiteCustomizeExists = File.Exists(SiteCustomize);
 
-        if (getPipExists && siteCustomizeExists)
+        if (GetPipExists && SiteCustomizeExists)
         {
-            bool pipInstalled = Directory.Exists(Path.Combine(PythonDir, "Lib")) &&
+            bool PipInstalled = Directory.Exists(Path.Combine(PythonDir, "Lib")) &&
                                 Directory.Exists(Path.Combine(PythonDir, "Scripts")) &&
                                 File.Exists(PipExe) &&
                                 File.Exists(Path.Combine(PythonDir, "Scripts", "pip3.13.exe")) &&
                                 File.Exists(Path.Combine(PythonDir, "Scripts", "pip3.exe"));
 
-            if (!pipInstalled)
+            if (!PipInstalled)
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
                     Console.WriteLine("Installing pip...");
                 }
 
                 try
                 {
-                    string getPipArguments = $"\"{GetPipScript}\" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-                    string output = RunProcess(PythonExe, getPipArguments);
+                    string GetPipArguments = $"\"{GetPipScript}\" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
+                    string Output = RunProcess(PythonExe, GetPipArguments);
                     
-                    if (!string.IsNullOrWhiteSpace(output))
+                    if (!string.IsNullOrWhiteSpace(Output))
                     {
                         Console.WriteLine("pip installation log:");
-                        Console.WriteLine(output);
+                        Console.WriteLine(Output);
                     }
                     else
                     {
                         Console.WriteLine("Failed to install pip. Empty output from get-pip process.");
                     }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.WriteLine($"Failed to run pip installation: {ex.Message}");
+                    Console.WriteLine($"Failed to run pip installation: {e.Message}");
                 }
             }
             else
             {
-                if (_showConsole)
+                if (ShowConsole)
                 {
                     Console.WriteLine("pip already installed.");
                 }
@@ -247,155 +245,156 @@ public class PyCS
 
     public void Pip(string[] args)
     {
-        string arguments = "install " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-        string output = RunProcess(PipExe, arguments);
-        if (_showConsole)
+        string Arguments = "install " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
+        string Output = RunProcess(PipExe, Arguments);
+        if (ShowConsole)
         {
-            Console.WriteLine(output);
+            Console.WriteLine(Output);
         }
     }
 
     public void PipUpgrade(string[] args)
     {
-        string arguments = "install --upgrade " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-        string output = RunProcess(PipExe, arguments);
-        if (_showConsole)
+        string Arguments = "install --upgrade " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
+        string Output = RunProcess(PipExe, Arguments);
+        if (ShowConsole)
         {
-            Console.WriteLine(output);
+            Console.WriteLine(Output);
         }
     }
 
     public void PipLocal(string[] args)
     {
-        string arguments = "install " + string.Join(" ", args) + " --no-index --find-links /";
-        string output = RunProcess(PipExe, arguments);
-        if (_showConsole)
+        string Arguments = "install " + string.Join(" ", args) + " --no-index --find-links /";
+        string Output = RunProcess(PipExe, Arguments);
+        if (ShowConsole)
         {
-            Console.WriteLine(output);
+            Console.WriteLine(Output);
         }
     }
 
     public void Stop()
     {
-        lock (_processLock)
+        lock (ProcessLock)
         {
-            if (_currentProcess != null && !_currentProcess.HasExited)
+            if (CurrentProcess != null && !CurrentProcess.HasExited)
             {
                 try
                 {
-                    _currentProcess.CloseMainWindow();
-                    if (!_currentProcess.WaitForExit(2000))
+                    CurrentProcess.CloseMainWindow();
+                    if (!CurrentProcess.WaitForExit(2000))
                     {
-                        _currentProcess.Kill();
-                        _currentProcess.WaitForExit();
+                        CurrentProcess.Kill();
+                        CurrentProcess.WaitForExit();
                     }
                 }
-                catch
-                {
-                }
+                catch { }
             }
         }
     }
 
-    public void Run(string script)
+    public void Run(string Script)
     {
-        File.WriteAllText(MainPy, script);
-        string output = RunProcess(PythonExe, MainPy);
-        Console.WriteLine(output);
+        File.WriteAllText(MainPy, Script);
+        string Output = RunProcess(PythonExe, MainPy);
+        Console.WriteLine(Output);
     }
 
-    public void RunFile(string filePath)
+    public void RunFile(string FilePath)
     {
-        string output = RunProcess(PythonExe, filePath);
-        Console.WriteLine(output);
+        string Output = RunProcess(PythonExe, FilePath);
+        Console.WriteLine(Output);
     }
 
-    public string GetOutput(string script)
+    public string GetOutput(string Script)
     {
-        File.WriteAllText(MainPy, script);
+        File.WriteAllText(MainPy, Script);
         return RunProcess(PythonExe, MainPy);
     }
 
-    public string GetFileOutput(string filePath)
+    public string GetFileOutput(string FilePath)
     {
-        return RunProcess(PythonExe, filePath);
+        return RunProcess(PythonExe, FilePath);
     }
 
-    private string RunProcess(string fileName, string arguments)
+    private string RunProcess(string PythonExeFileName, string PythonExeArguments)
     {
-        using (var proc = new Process())
+        using (var Process = new Process())
         {
-            proc.StartInfo = new ProcessStartInfo
+            Process.StartInfo = new ProcessStartInfo
             {
-                FileName = fileName,
-                Arguments = arguments,
+                FileName = PythonExeFileName,
+                Arguments = PythonExeArguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = _showConsole
+                CreateNoWindow = ShowConsole
             };
 
-            lock (_processLock)
+            lock (ProcessLock)
             {
-                _currentProcess = proc;
+                CurrentProcess = Process;
             }
 
             try
             {
-                proc.Start();
+                Process.Start();
                 
-                var outTask = proc.StandardOutput.ReadToEndAsync();
-                var errTask = proc.StandardError.ReadToEndAsync();
+                var OutputTask = Process.StandardOutput.ReadToEndAsync();
+                var ErrorTask = Process.StandardError.ReadToEndAsync();
                 
-                proc.WaitForExit();
+                Process.WaitForExit();
                 
-                Task.WaitAll(outTask, errTask);
+                Task.WaitAll(OutputTask, ErrorTask);
 
-                string output = outTask.Result;
-                string error = errTask.Result;
+                string Output = OutputTask.Result;
+                string Error = ErrorTask.Result;
 
-                if (!string.IsNullOrWhiteSpace(error))
+                if (!string.IsNullOrWhiteSpace(Error))
                 {
-                    return $"{output}{Environment.NewLine}Error Output:{Environment.NewLine}{error}";
+                    return $"{Output}{Environment.NewLine}Error Output:{Environment.NewLine}{Error}";
                 }
-                return output;
+                return Output;
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return $"Execution failed: {ex.Message}";
+                return $"Execution failed: {e.Message}";
             }
             finally
             {
-                lock (_processLock)
+                lock (ProcessLock)
                 {
-                    if (_currentProcess == proc)
+                    if (CurrentProcess == Process)
                     {
-                        _currentProcess = null;
+                        CurrentProcess = null;
                     }
                 }
             }
         }
     }
 
-    private static void ExtractZipSafe(string zipPath, string extractPath)
+    private static void ExtractZipSafe(string ZipPath, string ExtractPath)
     {
-        using (var archive = ZipFile.OpenRead(zipPath))
+        using (var Archive = ZipFile.OpenRead(ZipPath))
         {
-            foreach (var entry in archive.Entries)
+            foreach (var Entry in Archive.Entries)
             {
-                string targetPath = Path.GetFullPath(Path.Combine(extractPath, entry.FullName));
+                string TargetPath = Path.GetFullPath(Path.Combine(ExtractPath, Entry.FullName));
                 
-                string? directory = Path.GetDirectoryName(targetPath);
-                if (directory != null)
+                string? DirectoryPath = Path.GetDirectoryName(TargetPath);
+                if (DirectoryPath != null)
                 {
-                    Directory.CreateDirectory(directory);
+                    Directory.CreateDirectory(DirectoryPath);
                 }
 
-                if (!string.IsNullOrEmpty(entry.Name)) 
+                if (!string.IsNullOrEmpty(Entry.Name)) 
                 {
-                    entry.ExtractToFile(targetPath, overwrite: true);
+                    Entry.ExtractToFile(TargetPath, overwrite: true);
                 }
             }
         }
     }
 }
+#else
+public class PyCS { }
+#endif

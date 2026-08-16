@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -19,6 +20,28 @@ public class SimpleFileHandler
     public static void Append(string FilePath, string Content)
     {
         File.AppendAllText(FilePath, Content);
+    }
+
+    private static void ExtractZipSafe(string ZipPath, string ExtractPath)
+    {
+        using (var Archive = ZipFile.OpenRead(ZipPath))
+        {
+            foreach (var Entry in Archive.Entries)
+            {
+                string TargetPath = Path.GetFullPath(Path.Combine(ExtractPath, Entry.FullName));
+                
+                string? DirectoryPath = Path.GetDirectoryName(TargetPath);
+                if (DirectoryPath != null)
+                {
+                    Directory.CreateDirectory(DirectoryPath);
+                }
+
+                if (!string.IsNullOrEmpty(Entry.Name)) 
+                {
+                    Entry.ExtractToFile(TargetPath, overwrite: true);
+                }
+            }
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

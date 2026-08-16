@@ -3,5 +3,10 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update Actions namespace
+    // - update a few classes
+
+    public Changes()
+    {
+        throw new InvalidOperationException("Please avoid initializing the Changes class.");
+    }
 }
