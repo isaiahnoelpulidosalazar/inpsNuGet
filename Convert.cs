@@ -13,18 +13,22 @@ public class Convert
         }
         return temp;
     }
+
     public static string ToBase64(string str)
     {
         return System.Convert.ToBase64String(Encoding.UTF8.GetBytes(str));
     }
+
     public static string FromBase64(string str)
     {
         return Encoding.UTF8.GetString(System.Convert.FromBase64String(str));
     }
+
     public static byte[] ToByteArray(string str)
     {
         return Encoding.UTF8.GetBytes(str);
     }
+
     public static string FromByteArray(byte[] array)
     {
         return Encoding.UTF8.GetString(array);
@@ -40,6 +44,7 @@ public class Convert
         }
         return sb.ToString();
     }
+
     public static string FromBinary(string str)
     {
         StringBuilder sb = new StringBuilder();
@@ -50,6 +55,7 @@ public class Convert
         }
         return sb.ToString();
     }
+
     public static string ToBinary(string str)
     {
         StringBuilder sb = new StringBuilder();
@@ -69,18 +75,22 @@ public class Convert
         }
         return sb.ToString();
     }
+
     public static int ToInt(string str)
     {
         return int.Parse(str);
     }
+    
     public static double ToDouble(string str)
     {
         return double.Parse(str);
     }
+
     public static long ToLong(string str)
     {
         return long.Parse(str);
     }
+
     public static float ToFloat(string str)
     {
         return float.Parse(str);

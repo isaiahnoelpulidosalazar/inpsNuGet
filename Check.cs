@@ -8,44 +8,44 @@ public class Check
 {
     public static class Email
     {
-        static ArrayList validDomainNames = new ArrayList();
-        static ArrayList validDomainExtensions = new ArrayList();
-        static ArrayList validDomains = new ArrayList();
-        static bool shouldUseFullDomain = false;
+        static ArrayList ValidDomainNames = new ArrayList();
+        static ArrayList ValidDomainExtensions = new ArrayList();
+        static ArrayList ValidDomains = new ArrayList();
+        static bool UsingFullDomain = false;
 
-        public static void AddValidDomainName(string str)
+        public static void AddValidDomainName(string Str)
         {
-            validDomainNames.Add(str);
+            ValidDomainNames.Add(Str);
         }
 
-        public static void AddValidDomainExtension(string str)
+        public static void AddValidDomainExtension(string Str)
         {
-            validDomainExtensions.Add(str);
+            ValidDomainExtensions.Add(Str);
         }
         
-        public static void AddValidDomain(string str)
+        public static void AddValidDomain(string Str)
         {
-            validDomains.Add(str);
+            ValidDomains.Add(Str);
         }
 
         public static void ShouldUseFullDomain()
         {
-            shouldUseFullDomain = true;
+            UsingFullDomain = true;
         }
 
-        public static void ShouldUseFullDomain(bool boolean)
+        public static void ShouldUseFullDomain(bool UseFullDomain)
         {
-            shouldUseFullDomain = boolean;
+            UsingFullDomain = UseFullDomain;
         }
 
-        public static bool IsValid(string str)
+        public static bool IsValid(string Str)
         {
-            if (shouldUseFullDomain)
+            if (UsingFullDomain)
             {
                 try
                 {
-                    string[] domain = str.Split('@');
-                    return validDomains.Contains(domain[1]);
+                    string[] Domain = Str.Split('@');
+                    return ValidDomains.Contains(Domain[1]);
                 }
                 catch
                 {
@@ -56,10 +56,10 @@ public class Check
             {
                 try
                 {
-                    string[] domain = str.Split('@');
-                    string domainName = domain[1].Split('.')[0];
-                    string domainExtension = domain[1].Split('.')[1];
-                    return validDomainNames.Contains(domainName) && validDomainExtensions.Contains(domainExtension);
+                    string[] Domain = Str.Split('@');
+                    string DomainName = Domain[1].Split('.')[0];
+                    string DomainExtension = Domain[1].Split('.')[1];
+                    return ValidDomainNames.Contains(DomainName) && ValidDomainExtensions.Contains(DomainExtension);
                 }
                 catch
                 {

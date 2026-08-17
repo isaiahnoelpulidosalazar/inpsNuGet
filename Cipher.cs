@@ -2,7 +2,8 @@ namespace inpsNuGet;
 
 public class Cipher
 {
-    static string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
     public static string TranspositionCipher(string text)
     {
         text = text.Replace(" ", "");
@@ -19,6 +20,7 @@ public class Cipher
         }
         return temp + temp1;
     }
+
     public static string GiovanniCipher(string text, string keyword, string keyLetter)
     {
         string temp = "";
@@ -55,6 +57,7 @@ public class Cipher
         }
         return cipher;
     }
+
     public static string KeywordCipher(string text, string keyword)
     {
         string temp = "";
@@ -85,6 +88,7 @@ public class Cipher
         }
         return cipher;
     }
+    
     public static string CaesarCipher(string text, int shift)
     {
         string temp = "";
