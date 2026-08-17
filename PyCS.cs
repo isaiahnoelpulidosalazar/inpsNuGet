@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace inpsNuGet;
 
-#if WINDOWS
 public class PyCS
 {
     readonly bool ShowConsole = true;
@@ -395,6 +394,3 @@ public class PyCS
         }
     }
 }
-#else
-public class PyCS { }
-#endif

@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update Check and Cipher class
+    // - remove if WINDOWS condition in PyCS
 
     public Changes()
     {
