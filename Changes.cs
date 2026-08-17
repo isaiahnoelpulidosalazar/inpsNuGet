@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update a few classes
+    // - add new methods to Check class
 
     public Changes()
     {

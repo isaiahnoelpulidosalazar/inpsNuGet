@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace inpsNuGet;
@@ -68,68 +69,74 @@ public class Check
         }
     }
 
-    public static bool IsAValidPhilippineMobileNumber(string str)
+    public static bool IsAValidPhilippineMobileNumber(string Str)
     {
-        string pattern = @"^(?:09|\+639|639)\d{9}$";
-        return Regex.IsMatch(Regex.Replace(str, @"[\s\-\(\)]", ""), pattern);
+        return Regex.IsMatch(Regex.Replace(Str, @"[\s\-\(\)]", ""), @"^(?:09|\+639|639)\d{9}$");
     }
 
-    public static bool IsAllNumbers(string str)
+    public static bool IsAllNumbers(string Str)
     {
-        bool value = true;
-        string numbers = "0123456789";
-        foreach (char a in str)
-        {
-            if (!numbers.Contains(a))
-            {
-                value = false;
-            }
-        }
-        return value;
+        return !string.IsNullOrEmpty(Str) && Str.All(char.IsDigit);
     }
 
-    public static bool HasNumbers(string str)
+    public static bool HasNumbers(string Str)
     {
-        string numbers = "0123456789";
-        foreach (char a in str)
-        {
-            foreach (char b in numbers)
-            {
-                if (a == b)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return Str?.Any(char.IsDigit) ?? false;
     }
 
-    public static bool HasSymbols(string str)
+    public static bool IsAllAsciiNumbers(string Str)
     {
-        string symbols = "~`!@#$%^&*()_+-=[]{}\\|'\";:,.<>/?";
-        foreach (char a in str)
-        {
-            foreach (char b in symbols)
-            {
-                if (a == b)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return !string.IsNullOrEmpty(Str) && Str.All(char.IsAsciiDigit);
     }
 
-    public static bool HasSpaces(string str)
+    public static bool HasAsciiNumbers(string Str)
     {
-        foreach (char a in str)
-        {
-            if (a == ' ')
-            {
-                return true;
-            }
-        }
-        return false;
+        return Str?.Any(char.IsAsciiDigit) ?? false;
+    }
+
+    public static bool IsAllSymbols(string Str)
+    {
+        return !string.IsNullOrEmpty(Str) && Str.All(char.IsSymbol);
+    }
+    
+    public static bool HasSymbols(string Str)
+    {
+        return Str?.Any(char.IsSymbol) ?? false;
+    }
+
+    public static bool IsAllPunctuations(string Str)
+    {
+        return !string.IsNullOrEmpty(Str) && Str.All(char.IsPunctuation);
+    }
+    
+    public static bool HasPunctuations(string Str)
+    {
+        return Str?.Any(char.IsPunctuation) ?? false;
+    }
+
+    public static bool IsAllSpecialCharacters(string Str)
+    {
+        return !string.IsNullOrEmpty(Str) && Str.All(c => char.IsPunctuation(c) || char.IsSymbol(c));
+    }
+
+    public static bool HasSpecialCharacters(string Str)
+    {
+        return Str?.Any(c => char.IsPunctuation(c) || char.IsSymbol(c)) ?? false;
+    }
+
+    public static bool IsAllSpaces(string Str)
+    {
+        return !string.IsNullOrEmpty(Str) && Str.All(char.IsWhiteSpace);
+    }
+
+    public static bool HasSpaces(string Str)
+    {
+        return Str?.Any(char.IsWhiteSpace) ?? false;
+    }
+
+    public static bool HasNoSpaces(string Str)
+    {
+        return !string.IsNullOrEmpty(Str) && !Str.Any(char.IsWhiteSpace);
     }
 
     public static double HowManySecondsLeft(DateTime now, DateTime until)
