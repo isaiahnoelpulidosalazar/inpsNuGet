@@ -1,14 +1,11 @@
 ﻿using inpsNuGet;
+using System.Collections;
 using System.IO.Compression;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 internal class Program
 {
-    private static readonly HttpClient client = new HttpClient
-    {
-        Timeout = TimeSpan.FromSeconds(5)
-    };
-
     private static void Main(string[] args)
     {
         //CheckConnectionAsync().GetAwaiter().GetResult();
@@ -32,34 +29,5 @@ internal class Program
         //    SimpleFileHandler.Write("pipdone", string.Empty);
         //}
         pyCS.RunFile("motion_detection.py");
-    }
-
-    private static async Task CheckConnectionAsync()
-    {
-        try
-        {
-            var response = await client.GetAsync("http://clients3.google.com/generate_204");
-
-            if (response.IsSuccessStatusCode)
-            {
-                Console.WriteLine("You have a working internet connection.");
-            }
-            else
-            {
-                Console.WriteLine("No internet access (Server returned an error status).");
-            }
-        }
-        catch (HttpRequestException)
-        {
-            Console.WriteLine("No internet access (Failed to reach the test server).");
-        }
-        catch (OperationCanceledException)
-        {
-            Console.WriteLine("No internet access (Connection timed out).");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
-        }
     }
 }
