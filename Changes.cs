@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - remove if WINDOWS condition in PyCS
+    // - update and add new functions for VerticalFlowLayoutPanel
 
     public Changes()
     {
