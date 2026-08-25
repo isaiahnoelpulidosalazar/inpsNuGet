@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - fix VerticalFlowLayoutPanel scroll situation
+    // - change VerticalFlowLayoutPanel to VerticalList
 
     public Changes()
     {

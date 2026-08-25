@@ -4,11 +4,11 @@ namespace inpsNuGet;
 
 #if WINDOWS
 [ToolboxItem(true)]
-public class VerticalFlowLayoutPanel : FlowLayoutPanel
+public class VerticalList : FlowLayoutPanel
 {
     bool IsAdjustingWidths = false;
 
-    public VerticalFlowLayoutPanel()
+    public VerticalList()
     {
         BorderStyle = BorderStyle.FixedSingle;
         AutoScroll = true;
@@ -164,5 +164,5 @@ public class VerticalFlowLayoutPanel : FlowLayoutPanel
     }
 }
 #else
-public class VerticalFlowLayoutPanel { }
+public class VerticalList { }
 #endif
