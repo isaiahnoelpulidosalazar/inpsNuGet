@@ -56,7 +56,16 @@ public class VerticalFlowLayoutPanel : FlowLayoutPanel
         UpdateItemMargins();
         AdjustItemWidths();
         PerformLayout();
-        ScrollControlIntoView(Panel);
+
+        if (IsHandleCreated && Visible)
+        {
+            ScrollToBottom();
+        }
+    }
+
+    public void ScrollToBottom()
+    {
+        AutoScrollPosition = new Point(0, DisplayRectangle.Height);
     }
 
     void UpdateItemMargins()
@@ -143,6 +152,15 @@ public class VerticalFlowLayoutPanel : FlowLayoutPanel
     {
         base.OnResize(eventargs);
         AdjustItemWidths();
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        BeginInvoke((MethodInvoker)delegate
+        {
+            ScrollToBottom();
+        });
     }
 }
 #else

@@ -59,7 +59,16 @@ namespace inpsNuGetTestForm
             UpdateItemMargins();
             AdjustItemWidths();
             PerformLayout();
-            ScrollControlIntoView(Panel);
+
+            if (IsHandleCreated && Visible)
+            {
+                ScrollToBottom();
+            }
+        }
+
+        public void ScrollToBottom()
+        {
+            AutoScrollPosition = new Point(0, DisplayRectangle.Height);
         }
 
         void UpdateItemMargins()
@@ -146,6 +155,15 @@ namespace inpsNuGetTestForm
         {
             base.OnResize(eventargs);
             AdjustItemWidths();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            BeginInvoke((MethodInvoker)delegate
+            {
+                ScrollToBottom();
+            });
         }
     }
 }
