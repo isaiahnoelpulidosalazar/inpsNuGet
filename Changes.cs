@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update hover background for VerticalList
+    // - convert list item to reusable ClickableElement
 
     public Changes()
     {

@@ -30,52 +30,10 @@ public class VerticalList : FlowLayoutPanel
 
     public void AddItem(string Title)
     {
-        Panel Panel = new Panel
+        Controls.Add(new ClickableElement(Title).SetEvent(() =>
         {
-            Height = 38,
-            BorderStyle = BorderStyle.FixedSingle,
-            Margin = new Padding(3, 3, 3, 0),
-            BackColor = SystemColors.Control,
-            Cursor = Cursors.Hand
-        };
-
-        int InitialWidth = Math.Max(50, ClientSize.Width - 6);
-        Panel.Width = InitialWidth;
-
-        Label Label = new Label
-        {
-            Text = string.IsNullOrEmpty(Title) ? "Title" : Title,
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(3, 0, 3, 0),
-            BackColor = SystemColors.Control,
-            AutoEllipsis = true,
-            Cursor = Cursors.Hand
-        };
-
-        Panel.MouseEnter += (s, e) =>
-        {
-            Panel.BackColor = Color.LightGray;
-            Label.BackColor = Color.LightGray;
-        };
-        Panel.MouseLeave += (s, e) =>
-        {
-            Panel.BackColor = SystemColors.Control;
-            Label.BackColor = SystemColors.Control;
-        };
-        Label.MouseEnter += (s, e) =>
-        {
-            Panel.BackColor = Color.LightGray;
-            Label.BackColor = Color.LightGray;
-        };
-        Label.MouseLeave += (s, e) =>
-        {
-            Panel.BackColor = SystemColors.Control;
-            Label.BackColor = SystemColors.Control;
-        };
-
-        Panel.Controls.Add(Label);
-        Controls.Add(Panel);
+            MessageBox.Show(Title);
+        }));
 
         UpdateItemMargins();
         AdjustItemWidths();
