@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - convert list item to reusable ClickableElement
+    // - update VerticalList item event
 
     public Changes()
     {

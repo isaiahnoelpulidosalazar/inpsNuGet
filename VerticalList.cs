@@ -30,10 +30,35 @@ public class VerticalList : FlowLayoutPanel
 
     public void AddItem(string Title)
     {
-        Controls.Add(new ClickableElement(Title).SetEvent(() =>
+        Controls.Add(new ClickableElement(Title));
+
+        UpdateItemMargins();
+        AdjustItemWidths();
+        PerformLayout();
+
+        if (IsHandleCreated && Visible)
         {
-            MessageBox.Show(Title);
-        }));
+            ScrollToBottom();
+        }
+    }
+
+    public void AddItem(string Title, Action Event)
+    {
+        Controls.Add(new ClickableElement(Title).SetEvent(Event));
+
+        UpdateItemMargins();
+        AdjustItemWidths();
+        PerformLayout();
+
+        if (IsHandleCreated && Visible)
+        {
+            ScrollToBottom();
+        }
+    }
+
+    public void AddItem(ClickableElement ClickableElement)
+    {
+        Controls.Add(ClickableElement);
 
         UpdateItemMargins();
         AdjustItemWidths();
