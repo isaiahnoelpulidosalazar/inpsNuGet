@@ -18,6 +18,7 @@ namespace inpsNuGetTestForm
             FlowDirection = FlowDirection.TopDown;
             WrapContents = false;
             Padding = new Padding(0, 0, 0, 3);
+            DoubleBuffered = true;
         }
 
         protected override System.Windows.Forms.CreateParams CreateParams
@@ -47,10 +48,32 @@ namespace inpsNuGetTestForm
             Label Label = new Label
             {
                 Text = string.IsNullOrEmpty(Title) ? "Title" : Title,
-                Location = new Point(5, 11),
-                Size = new Size(130, 18),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(3, 0, 3, 0),
                 AutoEllipsis = true,
                 Cursor = Cursors.Hand
+            };
+
+            Panel.MouseEnter += (s, e) =>
+            {
+                Panel.BackColor = Color.LightGray;
+                Label.BackColor = Color.LightGray;
+            };
+            Panel.MouseLeave += (s, e) =>
+            {
+                Panel.BackColor = SystemColors.Control;
+                Label.BackColor = SystemColors.Control;
+            };
+            Label.MouseEnter += (s, e) =>
+            {
+                Panel.BackColor = Color.LightGray;
+                Label.BackColor = Color.LightGray;
+            };
+            Label.MouseLeave += (s, e) =>
+            {
+                Panel.BackColor = SystemColors.Control;
+                Label.BackColor = SystemColors.Control;
             };
 
             Panel.Controls.Add(Label);

@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - change VerticalFlowLayoutPanel to VerticalList
+    // - update hover background for VerticalList
 
     public Changes()
     {
