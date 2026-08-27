@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add get title function for ClickableElement
+    // - make SimpleFileHandler.ExtractZipSafe public
 
     public Changes()
     {

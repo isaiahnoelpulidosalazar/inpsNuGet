@@ -22,7 +22,7 @@ public class SimpleFileHandler
         File.AppendAllText(FilePath, Content);
     }
 
-    private static void ExtractZipSafe(string ZipPath, string ExtractPath)
+    public static void ExtractZipSafe(string ZipPath, string ExtractPath)
     {
         using (var Archive = ZipFile.OpenRead(ZipPath))
         {
