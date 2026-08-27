@@ -6,6 +6,7 @@ namespace inpsNuGet;
 [ToolboxItem(true)]
 public class ClickableElement : Panel
 {
+    string Title;
     Label Label;
     Action? Event;
     bool AmIHovered = false, AmIToggled = false;
@@ -15,6 +16,8 @@ public class ClickableElement : Panel
 
     public ClickableElement(string Title)
     {
+        this.Title = Title;
+        
         Height = 38;
         BorderStyle = BorderStyle.FixedSingle;
         Margin = new Padding(3, 3, 3, 0);
@@ -115,6 +118,11 @@ public class ClickableElement : Panel
         }
         PerformLayout();
         return this;
+    }
+
+    public string GetTitle()
+    {
+        return Title;
     }
 
     public bool IsToggled()

@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add toggle function for ClickableElement
+    // - add get title function for ClickableElement
 
     public Changes()
     {
