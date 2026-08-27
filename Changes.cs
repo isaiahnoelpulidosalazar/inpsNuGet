@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - make SimpleFileHandler.ExtractZipSafe public
+    // - rework SimpleFileHandler
 
     public Changes()
     {

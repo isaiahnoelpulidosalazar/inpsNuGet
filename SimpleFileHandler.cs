@@ -49,31 +49,31 @@ public class SimpleFileHandler
     {
         try
         {
-            string shortFileName = Path.GetFileName(FileName);
-            string actualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + shortFileName, StringComparison.OrdinalIgnoreCase));
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
 
-            if (actualResourceName == null)
+            if (ActualResourceName == null)
             {
-                throw new FileNotFoundException($"Could not find embedded resource ending with '.{shortFileName}'");
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
             }
 
-            string directory = Path.GetDirectoryName(FileName);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            string DirectoryPath = Path.GetDirectoryName(FileName);
+            if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
             {
-                Directory.CreateDirectory(directory);
+                Directory.CreateDirectory(DirectoryPath);
             }
 
-            using (Stream resourceStream = ExecutingAssembly.GetManifestResourceStream(actualResourceName))
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
             {
-                using (FileStream projectFileStream = File.Create(FileName))
+                using (FileStream ProjectFileStream = File.Create(FileName))
                 {
-                    resourceStream.CopyTo(projectFileStream);
+                    ResourceStream.CopyTo(ProjectFileStream);
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Console.WriteLine($"Cannot copy project file. Error: {ex.Message}");
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
         }
     }
 
@@ -82,18 +82,99 @@ public class SimpleFileHandler
     {
         try
         {
-            if (!Directory.Exists(FilePath))
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (ActualResourceName == null)
+            {
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
+            }
+
+            if (!string.IsNullOrEmpty(FilePath) && !Directory.Exists(FilePath))
             {
                 Directory.CreateDirectory(FilePath);
             }
-            using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, Path.GetFileName(FileName))))
+
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
             {
-                ExecutingAssembly.GetManifestResourceStream(ExecutingAssembly.EntryPoint.DeclaringType.Namespace + "." + Path.GetFileName(FileName)).CopyTo(ProjectFileStream);
+                using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, Path.GetFileName(FileName))))
+                {
+                    ResourceStream.CopyTo(ProjectFileStream);
+                }
             }
         }
-        catch
+        catch (Exception e)
         {
-            Console.WriteLine("Cannot copy project file. Please make sure the file's build action is set to 'Embedded Resource'.");
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ProjectToLocationThenExtractZip(Assembly ExecutingAssembly, string FileName)
+    {
+        try
+        {
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (ActualResourceName == null)
+            {
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
+            }
+
+            string DirectoryPath = Path.GetDirectoryName(FileName);
+            if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
+            {
+                Directory.CreateDirectory(DirectoryPath);
+            }
+
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
+            {
+                using (FileStream ProjectFileStream = File.Create(FileName))
+                {
+                    ResourceStream.CopyTo(ProjectFileStream);
+                }
+            }
+
+            ExtractZipSafe(FileName, DirectoryPath);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ProjectToLocationThenExtractZip(Assembly ExecutingAssembly, string FileName, string FilePath)
+    {
+        try
+        {
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (ActualResourceName == null)
+            {
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
+            }
+
+            if (!string.IsNullOrEmpty(FilePath) && !Directory.Exists(FilePath))
+            {
+                Directory.CreateDirectory(FilePath);
+            }
+
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
+            {
+                using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, ShortFileName)))
+                {
+                    ResourceStream.CopyTo(ProjectFileStream);
+                }
+            }
+
+            ExtractZipSafe(FileName, FilePath);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
         }
     }
 }
