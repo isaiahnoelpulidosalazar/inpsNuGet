@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update VerticalList item event
+    // - add toggle function for ClickableElement
 
     public Changes()
     {

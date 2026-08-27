@@ -33,10 +33,12 @@ namespace inpsNuGetTestForm
 
         public void AddItem(string Title)
         {
-            Controls.Add(new ClickableElement(Title).SetEvent(() =>
+            ClickableElement ce = new ClickableElement(Title);
+            ce.SetEvent(() =>
             {
-                MessageBox.Show(Title);
-            }));
+                ce.Toggle();
+            });
+            Controls.Add(ce);
 
             UpdateItemMargins();
             AdjustItemWidths();

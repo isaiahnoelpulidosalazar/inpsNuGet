@@ -8,7 +8,12 @@ namespace inpsNuGetTestForm
 {
     public class ClickableElement : Panel
     {
+        Label Label;
         Action? Event;
+        bool AmIHovered = false, AmIToggled = false;
+        Color ToggledColor = Color.FromArgb(58, 204, 0),
+            ToggledHoverColor = Color.FromArgb(53, 189, 0),
+            ToggledClickedColor = Color.FromArgb(48, 168, 0);
 
         public ClickableElement(string Title)
         {
@@ -21,7 +26,7 @@ namespace inpsNuGetTestForm
             int InitialWidth = Math.Max(50, ClientSize.Width - 6);
             Width = InitialWidth;
 
-            Label Label = new Label
+            Label = new Label
             {
                 Text = string.IsNullOrEmpty(Title) ? "Title" : Title,
                 Dock = DockStyle.Fill,
@@ -54,23 +59,57 @@ namespace inpsNuGetTestForm
             //};
             Label.MouseEnter += (s, e) =>
             {
-                BackColor = Color.LightGray;
-                Label.BackColor = Color.LightGray;
+                AmIHovered = true;
+                if (AmIToggled)
+                {
+                    BackColor = ToggledHoverColor;
+                    Label.BackColor = ToggledHoverColor;
+                }
+                else
+                {
+                    BackColor = Color.LightGray;
+                    Label.BackColor = Color.LightGray;
+                }
             };
             Label.MouseLeave += (s, e) =>
             {
-                BackColor = SystemColors.Control;
-                Label.BackColor = SystemColors.Control;
+                AmIHovered = false;
+                if (AmIToggled)
+                {
+                    BackColor = ToggledColor;
+                    Label.BackColor = ToggledColor;
+                }
+                else
+                {
+                    BackColor = SystemColors.Control;
+                    Label.BackColor = SystemColors.Control;
+                }
             };
             Label.MouseDown += (s, e) =>
             {
-                BackColor = Color.FromArgb(175, 175, 175);
-                Label.BackColor = Color.FromArgb(175, 175, 175);
+                if (AmIToggled)
+                {
+                    BackColor = ToggledClickedColor;
+                    Label.BackColor = ToggledClickedColor;
+                }
+                else
+                {
+                    BackColor = Color.FromArgb(175, 175, 175);
+                    Label.BackColor = Color.FromArgb(175, 175, 175);
+                }
             };
             Label.MouseUp += (s, e) =>
             {
-                BackColor = Color.LightGray;
-                Label.BackColor = Color.LightGray;
+                if (AmIToggled)
+                {
+                    BackColor = ToggledColor;
+                    Label.BackColor = ToggledColor;
+                }
+                else
+                {
+                    BackColor = Color.LightGray;
+                    Label.BackColor = Color.LightGray;
+                }
                 Event?.Invoke();
             };
 
@@ -81,6 +120,28 @@ namespace inpsNuGetTestForm
         {
             this.Event = Event;
             return this;
+        }
+
+        public ClickableElement Toggle()
+        {
+            AmIToggled = !AmIToggled;
+            if (AmIToggled)
+            {
+                BackColor = AmIHovered ? ToggledHoverColor : ToggledColor;
+                Label.BackColor = AmIHovered ? ToggledHoverColor : ToggledColor;
+            }
+            else
+            {
+                BackColor = AmIHovered ? Color.LightGray : SystemColors.Control;
+                Label.BackColor = AmIHovered ? Color.LightGray : SystemColors.Control;
+            }
+            PerformLayout();
+            return this;
+        }
+
+        public bool IsToggled()
+        {
+            return AmIToggled;
         }
     }
 }
