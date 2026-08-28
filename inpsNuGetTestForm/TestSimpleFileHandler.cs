@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
@@ -118,29 +119,8 @@ namespace inpsNuGetTestForm
         {
             try
             {
-                string ShortFileName = Path.GetFileName(FileName);
-                string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
-
-                if (ActualResourceName == null)
-                {
-                    throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
-                }
-
-                string DirectoryPath = Path.GetDirectoryName(FileName);
-                if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
-                {
-                    Directory.CreateDirectory(DirectoryPath);
-                }
-
-                using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
-                {
-                    using (FileStream ProjectFileStream = File.Create(FileName))
-                    {
-                        ResourceStream.CopyTo(ProjectFileStream);
-                    }
-                }
-
-                ExtractZipSafe(FileName, DirectoryPath);
+                ProjectToLocation(ExecutingAssembly, FileName);
+                ExtractZipSafe(FileName, "");
             }
             catch (Exception e)
             {
@@ -151,38 +131,43 @@ namespace inpsNuGetTestForm
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ProjectToLocationThenExtractZip(Assembly ExecutingAssembly, string FileName, string FilePath)
         {
-            //try
-            //{
-            //    string ShortFileName = Path.GetFileName(FileName);
-            //    string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+            try
+            {
+                ProjectToLocation(ExecutingAssembly, FileName, FilePath);
+                ExtractZipSafe(FilePath + "\\" + FileName, FilePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+            }
+        }
 
-            //    if (ActualResourceName == null)
-            //    {
-            //        throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
-            //    }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName)
+        {
+            try
+            {
+                ProjectToLocationThenExtractZip(ExecutingAssembly, FileName);
+                File.Delete(FileName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+            }
+        }
 
-            //    if (!string.IsNullOrEmpty(FilePath) && !Directory.Exists(FilePath))
-            //    {
-            //        Directory.CreateDirectory(FilePath);
-            //    }
-
-            //    using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
-            //    {
-            //        using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, ShortFileName)))
-            //        {
-            //            ResourceStream.CopyTo(ProjectFileStream);
-            //        }
-            //    }
-
-            //    ExtractZipSafe(FileName, FilePath);
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-            //}
-
-            ProjectToLocation(Assembly.GetExecutingAssembly(), FileName, FilePath);
-            ExtractZipSafe(FileName, FilePath);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName, string FilePath)
+        {
+            try
+            {
+                ProjectToLocationThenExtractZip(ExecutingAssembly, FileName, FilePath);
+                File.Delete(FilePath + "\\" + FileName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+            }
         }
     }
 }

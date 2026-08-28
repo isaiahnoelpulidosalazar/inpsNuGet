@@ -67,7 +67,7 @@ namespace inpsNuGetTestForm
                 verticalFlowLayoutPanel1.ScrollControlIntoView(tabItem);
             }
 
-            TestSimpleFileHandler.ProjectToLocationThenExtractZip(Assembly.GetExecutingAssembly(), "motion_detection.zip", "test");
+            TestSimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip", "test");
         }
 
         private void AdjustTabWidths()
