@@ -207,7 +207,7 @@ public class SimpleFileHandler
 
             ExtractZipSafe(FileName, DirectoryPath);
 
-            File.Delete(ZipPath + "\\" + ZipName);
+            File.Delete(DirectoryPath + "\\" + FileName);
         }
         catch (Exception e)
         {
@@ -243,7 +243,7 @@ public class SimpleFileHandler
 
             ExtractZipSafe(FileName, FilePath);
 
-            File.Delete(ZipPath + "\\" + ZipName);
+            File.Delete(FilePath + "\\" + FileName);
         }
         catch (Exception e)
         {
