@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - rework SimpleFileHandler
+    // - add delete for SimpleFileHandler.ProjectToLocation
 
     public Changes()
     {

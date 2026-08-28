@@ -177,4 +177,77 @@ public class SimpleFileHandler
             Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
         }
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName)
+    {
+        try
+        {
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (ActualResourceName == null)
+            {
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
+            }
+
+            string DirectoryPath = Path.GetDirectoryName(FileName);
+            if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
+            {
+                Directory.CreateDirectory(DirectoryPath);
+            }
+
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
+            {
+                using (FileStream ProjectFileStream = File.Create(FileName))
+                {
+                    ResourceStream.CopyTo(ProjectFileStream);
+                }
+            }
+
+            ExtractZipSafe(FileName, DirectoryPath);
+
+            File.Delete(ZipPath + "\\" + ZipName);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName, string FilePath)
+    {
+        try
+        {
+            string ShortFileName = Path.GetFileName(FileName);
+            string ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (ActualResourceName == null)
+            {
+                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
+            }
+
+            if (!string.IsNullOrEmpty(FilePath) && !Directory.Exists(FilePath))
+            {
+                Directory.CreateDirectory(FilePath);
+            }
+
+            using (Stream ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
+            {
+                using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, ShortFileName)))
+                {
+                    ResourceStream.CopyTo(ProjectFileStream);
+                }
+            }
+
+            ExtractZipSafe(FileName, FilePath);
+
+            File.Delete(ZipPath + "\\" + ZipName);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
+        }
+    }
 }
