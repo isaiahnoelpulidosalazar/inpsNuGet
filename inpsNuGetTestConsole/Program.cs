@@ -1,4 +1,5 @@
 ﻿using inpsNuGet;
+using inpsNuGetTestConsole;
 using System.Collections;
 using System.IO.Compression;
 using System.Reflection;
@@ -16,7 +17,7 @@ internal class Program
         //    ZipFile.ExtractToDirectory("motion_detection.zip", Directory.GetCurrentDirectory());
         //    File.Delete("motion_detection.zip");
         //}
-        PyCS pyCS = new PyCS();
+        //PyCS pyCS = new PyCS();
         //if (!File.Exists("pipdone"))
         //{
         //    pyCS.InstallPip();
@@ -28,6 +29,22 @@ internal class Program
         //    });
         //    SimpleFileHandler.Write("pipdone", string.Empty);
         //}
-        pyCS.RunFile("motion_detection.py");
+        //pyCS.RunFile("motion_detection.py");
+
+        SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip");
+
+        TestPyCS testPyCS = new TestPyCS();
+        if (!File.Exists("pipdone"))
+        {
+            testPyCS.InstallPip();
+            testPyCS.PipLocal(new string[]
+            {
+                "numpy-2.2.6-cp313-cp313-win_amd64.whl",
+                "opencv_python-4.12.0.88-cp37-abi3-win_amd64.whl",
+                "imutils-0.5.4-py3-none-any.whl"
+            });
+            SimpleFileHandler.Write("pipdone", string.Empty);
+        }
+        testPyCS.RunFile("motion_detection.py");
     }
 }

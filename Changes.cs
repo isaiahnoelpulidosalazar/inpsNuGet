@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add empty constructor for Actions
+    // - rewrite PyCS to speed up resource creation
 
     public Changes()
     {

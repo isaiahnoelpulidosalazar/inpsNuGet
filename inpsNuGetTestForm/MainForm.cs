@@ -12,62 +12,65 @@ namespace inpsNuGetTestForm
         {
             InitializeComponent();
 
-            for (int a = 0; a < 15; a++)
-            {
-                verticalFlowLayoutPanel2.AddItem($"Test{a + 1}");
+            //for (int a = 0; a < 15; a++)
+            //{
+            //    verticalFlowLayoutPanel2.AddItem($"Test{a + 1}");
 
-                Panel tabItem = new Panel
-                {
-                    Height = 38,
-                    BorderStyle = BorderStyle.FixedSingle,
-                    Margin = new Padding(3, 3, 3, 0),
-                    BackColor = SystemColors.Control,
-                    Cursor = Cursors.Hand
-                };
+            //    Panel tabItem = new Panel
+            //    {
+            //        Height = 38,
+            //        BorderStyle = BorderStyle.FixedSingle,
+            //        Margin = new Padding(3, 3, 3, 0),
+            //        BackColor = SystemColors.Control,
+            //        Cursor = Cursors.Hand
+            //    };
 
-                int initialWidth = Math.Max(50, verticalFlowLayoutPanel1.ClientSize.Width - 6);
-                tabItem.Width = initialWidth;
+            //    int initialWidth = Math.Max(50, verticalFlowLayoutPanel1.ClientSize.Width - 6);
+            //    tabItem.Width = initialWidth;
 
-                Label lblTitle = new Label
-                {
-                    Text = "Loading...",
-                    Location = new Point(5, 11),
-                    Size = new Size(130, 18),
-                    AutoEllipsis = true,
-                    Cursor = Cursors.Hand
-                };
+            //    Label lblTitle = new Label
+            //    {
+            //        Text = "Loading...",
+            //        Location = new Point(5, 11),
+            //        Size = new Size(130, 18),
+            //        AutoEllipsis = true,
+            //        Cursor = Cursors.Hand
+            //    };
 
-                Button btnClose = new Button
-                {
-                    Text = "×",
-                    Font = new Font("Arial", 9.5F, FontStyle.Bold),
-                    Size = new Size(20, 20),
-                    Location = new Point(148, 8),
-                    FlatStyle = FlatStyle.Flat,
-                    Cursor = Cursors.Hand
-                };
-                btnClose.FlatAppearance.BorderSize = 0;
+            //    Button btnClose = new Button
+            //    {
+            //        Text = "×",
+            //        Font = new Font("Arial", 9.5F, FontStyle.Bold),
+            //        Size = new Size(20, 20),
+            //        Location = new Point(148, 8),
+            //        FlatStyle = FlatStyle.Flat,
+            //        Cursor = Cursors.Hand
+            //    };
+            //    btnClose.FlatAppearance.BorderSize = 0;
 
-                //tabItem.Tag = webView;
-                //lblTitle.Tag = tabItem;
-                //btnClose.Tag = tabItem;
+            //    //tabItem.Tag = webView;
+            //    //lblTitle.Tag = tabItem;
+            //    //btnClose.Tag = tabItem;
 
-                //tabItem.Click += TabItem_Click;
-                //lblTitle.Click += TabItem_Click;
-                //btnClose.Click += BtnClose_Click;
+            //    //tabItem.Click += TabItem_Click;
+            //    //lblTitle.Click += TabItem_Click;
+            //    //btnClose.Click += BtnClose_Click;
 
-                tabItem.Controls.Add(lblTitle);
-                tabItem.Controls.Add(btnClose);
+            //    tabItem.Controls.Add(lblTitle);
+            //    tabItem.Controls.Add(btnClose);
 
-                AdjustInternalTabControls(tabItem, initialWidth);
-                verticalFlowLayoutPanel1.Controls.Add(tabItem);
+            //    AdjustInternalTabControls(tabItem, initialWidth);
+            //    verticalFlowLayoutPanel1.Controls.Add(tabItem);
 
-                AdjustTabWidths();
-                verticalFlowLayoutPanel1.PerformLayout();
-                verticalFlowLayoutPanel1.ScrollControlIntoView(tabItem);
-            }
+            //    AdjustTabWidths();
+            //    verticalFlowLayoutPanel1.PerformLayout();
+            //    verticalFlowLayoutPanel1.ScrollControlIntoView(tabItem);
+            //}
 
-            TestSimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip", "test");
+            //TestSimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip", "test");
+
+            TestPyCS testPyCS = new TestPyCS();
+            //testPyCS.Run("print('Hello from Python!')");
         }
 
         private void AdjustTabWidths()

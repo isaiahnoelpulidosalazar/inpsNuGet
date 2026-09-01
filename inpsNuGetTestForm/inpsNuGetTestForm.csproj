@@ -10,10 +10,13 @@
 
   <ItemGroup>
     <None Remove="motion_detection.zip" />
+    <None Remove="PythonFiles.zip" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="motion_detection.zip" />
+    <EmbeddedResource Include="Python.zip" />
+    <EmbeddedResource Include="PythonFiles.zip" />
   </ItemGroup>
 
   <ItemGroup>

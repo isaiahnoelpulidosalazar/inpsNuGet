@@ -16,19 +16,18 @@ public class PyCS
 
     const string PythonVersionShort = "Python 3.13";
     const string PythonVersionFull = "Python 3.13.5";
-    const string PythonVersionFileSafe = "python-3.13.5";
-    static readonly string PythonZip = $"{PythonVersionFileSafe}-embed-amd64.zip";
-    const string PyFilesZip = "py_files.zip";
-    const string PythonDir = "python3_13";
+    const string PythonZip = "Python.zip";
+    const string PythonFilesZip = "PythonFiles.zip";
+    const string PythonDir = "Python";
     static readonly string PythonExe = Path.Combine(PythonDir, "python.exe");
     static readonly string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
     static readonly string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
     static readonly string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
     static readonly string MainPy = Path.Combine(PythonDir, "main.py");
 
-    public PyCS() : this(true) { }
+    public TestPyCS() : this(true) { }
 
-    public PyCS(bool console)
+    public TestPyCS(bool console)
     {
         ShowConsole = console;
         CreatePython();
@@ -36,7 +35,7 @@ public class PyCS
 
     private void CreatePython()
     {
-        if (!File.Exists(PythonZip))
+        if (!Directory.Exists(PythonDir))
         {
             if (ShowConsole)
             {
@@ -44,156 +43,26 @@ public class PyCS
             }
             try
             {
-                using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"inpsNuGet.{PythonVersionFileSafe}-embed-amd64.zip"))
-                {
-                    if (ResourceStream == null)
-                    {
-                        throw new FileNotFoundException("Embedded Python ZIP resource not found.");
-                    }
+                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonZip, PythonDir);
+                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonFilesZip, PythonDir);
+                
+                string NestedExtractPath = Path.Combine(PythonDir, "python313");
+                string PthPath = Path.Combine(PythonDir, "python313._pth");
+                string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
+                File.WriteAllText(PthPath, PthContent, new UTF8Encoding(false));
 
-                    using (var FileStream = File.Create(PythonZip))
-                    {
-                        ResourceStream.CopyTo(FileStream);
-                    }
-                }
+                string NestedZip = Path.Combine(PythonDir, "python313.zip");
+                SimpleFileHandler.ExtractZipSafe(NestedZip, NestedExtractPath);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Failed to create {PythonVersionShort} resources: {e.Message}");
             }
         }
-
-        if (!File.Exists(PyFilesZip))
-        {
-            try
-            {
-                using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
-                {
-                    if (ResourceStream == null)
-                    {
-                        throw new FileNotFoundException("Embedded py_files.zip resource not found.");
-                    }
-
-                    using (var FileStream = File.Create(PyFilesZip))
-                    {
-                        ResourceStream.CopyTo(FileStream);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Failed to write py_files.zip: {e.Message}");
-            }
-        }
-
-        bool ZipReadable = false;
-        try
-        {
-            if (File.Exists(PythonZip))
-            {
-                using (File.OpenRead(PythonZip)) { }
-                ZipReadable = true;
-            }
-        }
-        catch { }
-
-        if (ZipReadable)
-        {
-            string NestedExtractPath = Path.Combine(PythonDir, "python313");
-            if (!Directory.Exists(NestedExtractPath))
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine($"Extracting {PythonVersionShort} resources...");
-                }
-                try
-                {
-                    try
-                    {
-                        if (Directory.Exists(PythonDir))
-                        {
-                            Directory.Delete(PythonDir, true);
-                        }
-                    }
-                    catch { }
-
-                    Directory.CreateDirectory(PythonDir);
-                    
-                    ExtractZipSafe(PythonZip, PythonDir);
-
-                    string PthPath = Path.Combine(PythonDir, "python313._pth");
-                    string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
-                    File.WriteAllText(PthPath, PthContent, new UTF8Encoding(false));
-
-                    string NestedZip = Path.Combine(PythonDir, "python313.zip");
-                    ExtractZipSafe(NestedZip, NestedExtractPath);
-
-                    if (File.Exists(PyFilesZip))
-                    {
-                        ExtractZipSafe(PyFilesZip, PythonDir);
-                    }
-                }
-                catch (Exception e)
-                {
-                    if (ShowConsole)
-                    {
-                        Console.WriteLine($"Failed to extract {PythonVersionShort} resources: {e.Message}");
-                    }
-                }
-            }
-            else
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine($"{PythonVersionShort} resources already extracted.");
-                }
-            }
-        }
     }
 
     public void InstallPip()
     {
-        try
-        {
-            if (!File.Exists(GetPipScript) || !File.Exists(SiteCustomize))
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine("Extracting helper files from py_files.zip...");
-                }
-
-                if (!File.Exists(PyFilesZip))
-                {
-                    using (var ResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("inpsNuGet.py_files.zip"))
-                    {
-                        if (ResourceStream == null)
-                        {
-                            throw new FileNotFoundException("Embedded py_files.zip resource not found.");
-                        }
-
-                        using (var FileStream = File.Create(PyFilesZip))
-                        {
-                            ResourceStream.CopyTo(FileStream);
-                        }
-                    }
-                }
-
-                Directory.CreateDirectory(PythonDir);
-                ExtractZipSafe(PyFilesZip, PythonDir);
-            }
-            else
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine("Helper files already extracted.");
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Failed to extract helper files: {e.Message}. Make sure py_files.zip is set to 'Embedded Resource' in your project.");
-        }
-
         bool GetPipExists = File.Exists(GetPipScript);
         bool SiteCustomizeExists = File.Exists(SiteCustomize);
 
@@ -216,7 +85,7 @@ public class PyCS
                 {
                     string GetPipArguments = $"\"{GetPipScript}\" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
                     string Output = RunProcess(PythonExe, GetPipArguments);
-                    
+
                     if (!string.IsNullOrWhiteSpace(Output))
                     {
                         Console.WriteLine("pip installation log:");
@@ -338,12 +207,12 @@ public class PyCS
             try
             {
                 Process.Start();
-                
+
                 var OutputTask = Process.StandardOutput.ReadToEndAsync();
                 var ErrorTask = Process.StandardError.ReadToEndAsync();
-                
+
                 Process.WaitForExit();
-                
+
                 Task.WaitAll(OutputTask, ErrorTask);
 
                 string Output = OutputTask.Result;
@@ -367,28 +236,6 @@ public class PyCS
                     {
                         CurrentProcess = null;
                     }
-                }
-            }
-        }
-    }
-
-    private static void ExtractZipSafe(string ZipPath, string ExtractPath)
-    {
-        using (var Archive = ZipFile.OpenRead(ZipPath))
-        {
-            foreach (var Entry in Archive.Entries)
-            {
-                string TargetPath = Path.GetFullPath(Path.Combine(ExtractPath, Entry.FullName));
-                
-                string? DirectoryPath = Path.GetDirectoryName(TargetPath);
-                if (DirectoryPath != null)
-                {
-                    Directory.CreateDirectory(DirectoryPath);
-                }
-
-                if (!string.IsNullOrEmpty(Entry.Name)) 
-                {
-                    Entry.ExtractToFile(TargetPath, overwrite: true);
                 }
             }
         }
