@@ -14,6 +14,11 @@ public class Actions
     public Task? RunningTask { get; private set; }
     public bool IsRunning => RunningTask != null && !RunningTask.IsCompleted;
 
+    public Actions()
+    {
+        this.Action = () => { };
+    }
+    
     public Actions(Action Action)
     {
         this.Action = Action;

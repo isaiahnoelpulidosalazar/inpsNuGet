@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - remodel Actions class
+    // - add empty constructor for Actions
 
     public Changes()
     {
