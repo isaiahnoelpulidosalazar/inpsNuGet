@@ -25,9 +25,9 @@ public class PyCS
     static readonly string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
     static readonly string MainPy = Path.Combine(PythonDir, "main.py");
 
-    public TestPyCS() : this(true) { }
+    public PyCS() : this(true) { }
 
-    public TestPyCS(bool console)
+    public PyCS(bool console)
     {
         ShowConsole = console;
         CreatePython();
