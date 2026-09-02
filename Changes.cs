@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - add custom extract path for PyCS
+    // - fix custom Python directory handling in PyCS
 
     public Changes()
     {

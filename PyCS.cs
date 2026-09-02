@@ -20,11 +20,12 @@ public class PyCS
     const string PythonFilesZip = "PythonFiles.zip";
     const string PythonDir = "Python";
     string CustomPythonDir = string.Empty;
-    static readonly string PythonExe = Path.Combine(PythonDir, "python.exe");
-    static readonly string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
-    static readonly string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
-    static readonly string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
-    static readonly string MainPy = Path.Combine(PythonDir, "main.py");
+    string TargetPythonDir = string.Empty;
+    string PythonExe = Path.Combine(PythonDir, "python.exe");
+    string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
+    string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
+    string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
+    string MainPy = Path.Combine(PythonDir, "main.py");
 
     public PyCS() : this(true) { }
 
@@ -34,19 +35,40 @@ public class PyCS
         CreatePython();
     }
 
+    public PyCS(string customDir)
+    {
+        ShowConsole = true;
+        if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
+        {
+            CustomPythonDir = customDir;
+            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
+            PythonExe = Path.Combine(TargetPythonDir, "python.exe");
+            PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
+            GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
+            SiteCustomize = Path.Combine(TargetPythonDir, "sitecustomize.py");
+            MainPy = Path.Combine(TargetPythonDir, "main.py");
+        }
+        CreatePython();
+    }
+
     public PyCS(bool console, string customDir)
     {
         ShowConsole = console;
         if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
         {
             CustomPythonDir = customDir;
+            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
+            PythonExe = Path.Combine(TargetPythonDir, "python.exe");
+            PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
+            GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
+            SiteCustomize = Path.Combine(TargetPythonDir, "sitecustomize.py");
+            MainPy = Path.Combine(TargetPythonDir, "main.py");
         }
         CreatePython();
     }
 
     private void CreatePython()
     {
-        string TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
         if (!Directory.Exists(TargetPythonDir))
         {
             if (ShowConsole)
@@ -75,7 +97,6 @@ public class PyCS
 
     public void InstallPip()
     {
-        string TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
         bool GetPipExists = File.Exists(GetPipScript);
         bool SiteCustomizeExists = File.Exists(SiteCustomize);
 
