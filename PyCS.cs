@@ -19,6 +19,7 @@ public class PyCS
     const string PythonZip = "Python.zip";
     const string PythonFilesZip = "PythonFiles.zip";
     const string PythonDir = "Python";
+    string CustomPythonDir = string.Empty;
     static readonly string PythonExe = Path.Combine(PythonDir, "python.exe");
     static readonly string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
     static readonly string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
@@ -33,9 +34,20 @@ public class PyCS
         CreatePython();
     }
 
+    public PyCS(bool console, string customDir)
+    {
+        ShowConsole = console;
+        if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
+        {
+            CustomPythonDir = customDir;
+        }
+        CreatePython();
+    }
+
     private void CreatePython()
     {
-        if (!Directory.Exists(PythonDir))
+        string TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
+        if (!Directory.Exists(TargetPythonDir))
         {
             if (ShowConsole)
             {
@@ -43,15 +55,15 @@ public class PyCS
             }
             try
             {
-                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonZip, PythonDir);
-                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonFilesZip, PythonDir);
+                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonZip, TargetPythonDir);
+                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonFilesZip, TargetPythonDir);
                 
-                string NestedExtractPath = Path.Combine(PythonDir, "python313");
-                string PthPath = Path.Combine(PythonDir, "python313._pth");
+                string NestedExtractPath = Path.Combine(TargetPythonDir, "python313");
+                string PthPath = Path.Combine(TargetPythonDir, "python313._pth");
                 string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
                 File.WriteAllText(PthPath, PthContent, new UTF8Encoding(false));
 
-                string NestedZip = Path.Combine(PythonDir, "python313.zip");
+                string NestedZip = Path.Combine(TargetPythonDir, "python313.zip");
                 SimpleFileHandler.ExtractZipSafe(NestedZip, NestedExtractPath);
             }
             catch (Exception e)
@@ -68,11 +80,11 @@ public class PyCS
 
         if (GetPipExists && SiteCustomizeExists)
         {
-            bool PipInstalled = Directory.Exists(Path.Combine(PythonDir, "Lib")) &&
-                                Directory.Exists(Path.Combine(PythonDir, "Scripts")) &&
+            bool PipInstalled = Directory.Exists(Path.Combine(TargetPythonDir, "Lib")) &&
+                                Directory.Exists(Path.Combine(TargetPythonDir, "Scripts")) &&
                                 File.Exists(PipExe) &&
-                                File.Exists(Path.Combine(PythonDir, "Scripts", "pip3.13.exe")) &&
-                                File.Exists(Path.Combine(PythonDir, "Scripts", "pip3.exe"));
+                                File.Exists(Path.Combine(TargetPythonDir, "Scripts", "pip3.13.exe")) &&
+                                File.Exists(Path.Combine(TargetPythonDir, "Scripts", "pip3.exe"));
 
             if (!PipInstalled)
             {

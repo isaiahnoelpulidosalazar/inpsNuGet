@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - rewrite PyCS to speed up resource creation
+    // - add custom extract path for PyCS
 
     public Changes()
     {
