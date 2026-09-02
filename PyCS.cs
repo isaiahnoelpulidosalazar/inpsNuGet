@@ -75,6 +75,7 @@ public class PyCS
 
     public void InstallPip()
     {
+        string TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
         bool GetPipExists = File.Exists(GetPipScript);
         bool SiteCustomizeExists = File.Exists(SiteCustomize);
 
