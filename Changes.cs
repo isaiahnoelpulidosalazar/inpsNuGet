@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - fix custom Python directory handling in PyCS
+    // - update README.md
 
     public Changes()
     {
