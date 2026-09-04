@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - update README.md
+    // - patch broken pathing in PyCS
 
     public Changes()
     {

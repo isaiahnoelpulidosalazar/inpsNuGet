@@ -41,7 +41,7 @@ public class PyCS
         if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
         {
             CustomPythonDir = customDir;
-            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
+            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir + "\\" + PythonDir;
             PythonExe = Path.Combine(TargetPythonDir, "python.exe");
             PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
             GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
@@ -57,7 +57,7 @@ public class PyCS
         if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
         {
             CustomPythonDir = customDir;
-            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir;
+            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir + "\\" + PythonDir;
             PythonExe = Path.Combine(TargetPythonDir, "python.exe");
             PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
             GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
