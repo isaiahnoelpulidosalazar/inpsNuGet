@@ -31,20 +31,22 @@ internal class Program
         //}
         //pyCS.RunFile("motion_detection.py");
 
-        SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip");
+        //SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), "motion_detection.zip");
 
-        TestPyCS testPyCS = new TestPyCS();
-        if (!File.Exists("pipdone"))
-        {
-            testPyCS.InstallPip();
-            testPyCS.PipLocal(new string[]
-            {
-                "numpy-2.2.6-cp313-cp313-win_amd64.whl",
-                "opencv_python-4.12.0.88-cp37-abi3-win_amd64.whl",
-                "imutils-0.5.4-py3-none-any.whl"
-            });
-            SimpleFileHandler.Write("pipdone", string.Empty);
-        }
-        testPyCS.RunFile("motion_detection.py");
+        //TestPyCS testPyCS = new TestPyCS();
+        //if (!File.Exists("pipdone"))
+        //{
+        //    testPyCS.InstallPip();
+        //    testPyCS.PipLocal(new string[]
+        //    {
+        //        "numpy-2.2.6-cp313-cp313-win_amd64.whl",
+        //        "opencv_python-4.12.0.88-cp37-abi3-win_amd64.whl",
+        //        "imutils-0.5.4-py3-none-any.whl"
+        //    });
+        //    SimpleFileHandler.Write("pipdone", string.Empty);
+        //}
+        //testPyCS.RunFile("motion_detection.py");
+
+        Console.WriteLine("asdasd");
     }
 }

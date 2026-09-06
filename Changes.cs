@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - patch broken pathing in PyCS
+    // - remove extra space in error output of PyCS
 
     public Changes()
     {
