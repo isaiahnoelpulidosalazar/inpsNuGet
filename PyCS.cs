@@ -254,7 +254,7 @@ public class PyCS
 
                 if (!string.IsNullOrWhiteSpace(Error))
                 {
-                    return $"{!string.IsNullOrWhiteSpace(Output) ? Output + Environment.NewLine : string.Empty}Error Output:{Environment.NewLine}{Error}";
+                    return $"{(!string.IsNullOrWhiteSpace(Output) ? Output + Environment.NewLine : string.Empty)}Error Output:{Environment.NewLine}{Error}";
                 }
                 return Output;
             }
