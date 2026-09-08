@@ -3,7 +3,7 @@ namespace inpsNuGet;
 public class Changes
 {
     // changes:
-    // - remove extra space in error output of PyCS
+    // - add AreaCalculator
 
     public Changes()
     {

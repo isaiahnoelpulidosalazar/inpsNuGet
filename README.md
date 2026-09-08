@@ -27,9 +27,9 @@ Install-Package inpsNuGet
   - [VerticalList](#verticallist)
   - [ClickableElement](#clickableelement)
 - [Algorithms & Cryptography](#algorithms--cryptography)
-  - [Sort](#sort)
   - [Cipher](#cipher)
-- [Validation & Network (`Check`)](#validation--network-check)
+  - [Sort](#sort)
+- [Validation & Network (`AreaCalculator`, `Check`)](#validation--network-check)
 - [Data Conversion & Formatting (`Convert`, `Text`)](#data-conversion--formatting-convert-text)
 - [File & Embedded Resource I/O (`SimpleFileHandler`)](#file--embedded-resource-io-simplefilehandler)
 
@@ -145,6 +145,32 @@ public class MainForm : Form
 
 ## Algorithms & Cryptography
 
+### Cipher
+
+Classical text encryption ciphers for uppercase Latin alphabetic characters.
+
+```csharp
+using inpsNuGet;
+
+// Caesar Cipher
+string caesar = Cipher.CaesarCipher("HELLO WORLD", 3);
+// Output: "KHOOR ZRUOG"
+
+// Keyword Substitution Cipher
+string keyword = Cipher.KeywordCipher("HELLO WORLD", "KEYWORD");
+// Output: "AOGGJ UJNGW"
+
+// Giovanni Cipher (Rotated Keyword Cipher)
+string giovanni = Cipher.GiovanniCipher("HELLO WORLD", "KEYWORD", "C");
+// Output: "RYCCH SHLCE"
+
+// Transposition Cipher (Interleaves even/odd characters, strips spaces)
+string transposed = Cipher.TranspositionCipher("HELLO WORLD");
+// Output: "HLOOLELWRD"
+```
+
+---
+
 ### Sort
 
 A collection of sorting algorithms operating on primitive arrays.
@@ -180,34 +206,35 @@ double[] sortedDoubles = Sort.BucketSortUniform(doubles);
 
 ---
 
-### Cipher
+## Validation & Network (`AreaCalculator`, `Check`)
 
-Classical text encryption ciphers for uppercase Latin alphabetic characters.
+### AreaCalculator
+
+Geometric calculations for 2D shapes and 3D surface areas.
 
 ```csharp
 using inpsNuGet;
 
-// Caesar Cipher
-string caesar = Cipher.CaesarCipher("HELLO WORLD", 3);
-// Output: "KHOOR ZRUOG"
+// --- 2D Shapes ---
+AreaCalculator.SquareArea(4.0);                   // 16.0
+AreaCalculator.RectangleArea(4.0, 5.0);           // 20.0
+AreaCalculator.TriangleArea(10.0, 4.0);           // 20.0
+AreaCalculator.CircleArea(5.0);                   // 78.54
+AreaCalculator.SectorArea(5.0, 60.0);             // 13.09
+AreaCalculator.SegmentArea(5.0, 60.0);            // 2.26
 
-// Keyword Substitution Cipher
-string keyword = Cipher.KeywordCipher("HELLO WORLD", "KEYWORD");
-// Output: "AOGGJ UJNGW"
+// Polygon (Shoelace Formula)
+var vertices = new List<(double X, double Y)> { (0,0), (4,0), (4,3), (0,3) };
+AreaCalculator.PolygonShoelaceArea(vertices);    // 12.0
 
-// Giovanni Cipher (Rotated Keyword Cipher)
-string giovanni = Cipher.GiovanniCipher("HELLO WORLD", "KEYWORD", "C");
-// Output: "RYCCH SHLCE"
+// --- 3D Surface Areas ---
+AreaCalculator.CubeSurfaceArea(3.0);              // 54.0
+AreaCalculator.CylinderSurfaceArea(3.0, 10.0);   // 245.04
+AreaCalculator.SphereSurfaceArea(3.0);            // 113.10
 
-// Transposition Cipher (Interleaves even/odd characters, strips spaces)
-string transposed = Cipher.TranspositionCipher("HELLO WORLD");
-// Output: "HLOOLELWRD"
 ```
 
----
-
-## Validation & Network (`Check`)
-
+### Check
 ```csharp
 using inpsNuGet;
 
