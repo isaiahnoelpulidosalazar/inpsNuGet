@@ -1,277 +1,164 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace inpsNuGet;
 
-public class PyCS
+/// <summary>
+/// Manages an embedded Python 3.13 runtime (extracted lazily on first use) with pip and script execution.
+/// Requires Python.zip and PythonFiles.zip embedded in the package.
+/// </summary>
+[SupportedOSPlatform("windows")]
+public sealed class PyCS
 {
-    readonly bool ShowConsole = true;
-    readonly object ProcessLock = new();
-    Process? CurrentProcess;
+    const string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
+    static readonly string[] TrustedHostArgs =
+        ["--trusted-host", "pypi.org", "--trusted-host", "files.pythonhosted.org", "--trusted-host", "pypi.python.org"];
 
-    const string PythonVersionShort = "Python 3.13";
-    const string PythonVersionFull = "Python 3.13.5";
-    const string PythonZip = "Python.zip";
-    const string PythonFilesZip = "PythonFiles.zip";
-    const string PythonDir = "Python";
-    string CustomPythonDir = string.Empty;
-    string TargetPythonDir = string.Empty;
-    string PythonExe = Path.Combine(PythonDir, "python.exe");
-    string PipExe = Path.Combine(PythonDir, "Scripts", "pip.exe");
-    string GetPipScript = Path.Combine(PythonDir, "get-pip.py");
-    string SiteCustomize = Path.Combine(PythonDir, "sitecustomize.py");
-    string MainPy = Path.Combine(PythonDir, "main.py");
+    readonly TextWriter? _log;
+    readonly string _root, _pythonExe, _pipExe, _getPipScript, _siteCustomize;
+    readonly object _lock = new();
+    Process? _current;
 
-    public PyCS() : this(true) { }
+    /// <summary>Opt-in. Adds --trusted-host for PyPI hosts, which DISABLES TLS verification for them.</summary>
+    public bool TrustPypiHosts { get; set; }
 
-    public PyCS(bool console)
+    /// <param name="directory">Parent folder; Python is extracted to "&lt;directory&gt;/Python". Default: ./Python.</param>
+    /// <param name="log">Optional progress sink (e.g. Console.Out). Null = silent.</param>
+    public PyCS(string? directory = null, TextWriter? log = null)
     {
-        ShowConsole = console;
-        CreatePython();
+        _log = log;
+        _root = string.IsNullOrWhiteSpace(directory) ? "Python" : Path.Combine(directory, "Python");
+        _pythonExe = Path.Combine(_root, "python.exe");
+        _pipExe = Path.Combine(_root, "Scripts", "pip.exe");
+        _getPipScript = Path.Combine(_root, "get-pip.py");
+        _siteCustomize = Path.Combine(_root, "sitecustomize.py");
     }
 
-    public PyCS(string customDir)
+    /// <summary>Extracts the runtime if needed. Idempotent; called automatically by every other method.</summary>
+    public void Initialize()
     {
-        ShowConsole = true;
-        if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
+        lock (_lock)
         {
-            CustomPythonDir = customDir;
-            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir + "\\" + PythonDir;
-            PythonExe = Path.Combine(TargetPythonDir, "python.exe");
-            PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
-            GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
-            SiteCustomize = Path.Combine(TargetPythonDir, "sitecustomize.py");
-            MainPy = Path.Combine(TargetPythonDir, "main.py");
-        }
-        CreatePython();
-    }
+            if (File.Exists(_pythonExe)) return;
 
-    public PyCS(bool console, string customDir)
-    {
-        ShowConsole = console;
-        if (customDir != null && !string.IsNullOrWhiteSpace(customDir))
-        {
-            CustomPythonDir = customDir;
-            TargetPythonDir = string.IsNullOrWhiteSpace(CustomPythonDir) ? PythonDir : CustomPythonDir + "\\" + PythonDir;
-            PythonExe = Path.Combine(TargetPythonDir, "python.exe");
-            PipExe = Path.Combine(TargetPythonDir, "Scripts", "pip.exe");
-            GetPipScript = Path.Combine(TargetPythonDir, "get-pip.py");
-            SiteCustomize = Path.Combine(TargetPythonDir, "sitecustomize.py");
-            MainPy = Path.Combine(TargetPythonDir, "main.py");
-        }
-        CreatePython();
-    }
-
-    private void CreatePython()
-    {
-        if (!Directory.Exists(TargetPythonDir))
-        {
-            if (ShowConsole)
-            {
-                Console.WriteLine($"Creating {PythonVersionShort} resources...");
-            }
+            _log?.WriteLine("Creating Python 3.13 resources...");
+            Assembly asm = typeof(PyCS).Assembly;
             try
             {
-                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonZip, TargetPythonDir);
-                SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(Assembly.GetExecutingAssembly(), PythonFilesZip, TargetPythonDir);
-                
-                string NestedExtractPath = Path.Combine(TargetPythonDir, "python313");
-                string PthPath = Path.Combine(TargetPythonDir, "python313._pth");
-                string PthContent = "python313.zip\r\n.\r\n\r\n# Uncomment to run site.main() automatically\r\nimport site\r\n";
-                File.WriteAllText(PthPath, PthContent, new UTF8Encoding(false));
-
-                string NestedZip = Path.Combine(TargetPythonDir, "python313.zip");
-                SimpleFileHandler.ExtractZipSafe(NestedZip, NestedExtractPath);
+                SimpleFileHandler.ExtractEmbeddedZip(asm, "Python.zip", _root);
+                SimpleFileHandler.ExtractEmbeddedZip(asm, "PythonFiles.zip", _root);
+                File.WriteAllText(Path.Combine(_root, "python313._pth"), PthContent, new UTF8Encoding(false));
+                SimpleFileHandler.ExtractZipSafe(Path.Combine(_root, "python313.zip"), Path.Combine(_root, "python313"));
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine($"Failed to create {PythonVersionShort} resources: {e.Message}");
+                try { Directory.Delete(_root, recursive: true); } catch { /* best effort */ }
+                throw;
             }
         }
     }
 
-    public void InstallPip()
+    /// <summary>Installs pip if missing. Returns the get-pip result, or null if pip was already installed.</summary>
+    public ProcessResult? InstallPip()
     {
-        bool GetPipExists = File.Exists(GetPipScript);
-        bool SiteCustomizeExists = File.Exists(SiteCustomize);
+        Initialize();
+        if (File.Exists(_pipExe)) { _log?.WriteLine("pip already installed."); return null; }
+        if (!File.Exists(_getPipScript) || !File.Exists(_siteCustomize))
+            throw new FileNotFoundException("get-pip.py / sitecustomize.py not found in the extracted runtime.", _getPipScript);
 
-        if (GetPipExists && SiteCustomizeExists)
-        {
-            bool PipInstalled = Directory.Exists(Path.Combine(TargetPythonDir, "Lib")) &&
-                                Directory.Exists(Path.Combine(TargetPythonDir, "Scripts")) &&
-                                File.Exists(PipExe) &&
-                                File.Exists(Path.Combine(TargetPythonDir, "Scripts", "pip3.13.exe")) &&
-                                File.Exists(Path.Combine(TargetPythonDir, "Scripts", "pip3.exe"));
-
-            if (!PipInstalled)
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine("Installing pip...");
-                }
-
-                try
-                {
-                    string GetPipArguments = $"\"{GetPipScript}\" --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-                    string Output = RunProcess(PythonExe, GetPipArguments);
-
-                    if (!string.IsNullOrWhiteSpace(Output))
-                    {
-                        Console.WriteLine("pip installation log:");
-                        Console.WriteLine(Output);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to install pip. Empty output from get-pip process.");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to run pip installation: {e.Message}");
-                }
-            }
-            else
-            {
-                if (ShowConsole)
-                {
-                    Console.WriteLine("pip already installed.");
-                }
-            }
-        }
+        _log?.WriteLine("Installing pip...");
+        var args = new List<string> { _getPipScript };
+        if (TrustPypiHosts) args.AddRange(TrustedHostArgs);
+        return Log(Execute(_pythonExe, args));
     }
 
-    public void Pip(string[] args)
+    public ProcessResult Pip(params string[] packages) => RunPip(["install"], packages, []);
+
+    public ProcessResult PipUpgrade(params string[] packages) => RunPip(["install", "--upgrade"], packages, []);
+
+    /// <summary>Installs from a local wheel directory only (no index access).</summary>
+    public ProcessResult PipLocal(string findLinksDirectory, params string[] packages) =>
+        RunPip(["install"], packages, ["--no-index", "--find-links", findLinksDirectory], useTrustedHosts: false);
+
+    ProcessResult RunPip(string[] lead, string[] packages, string[] extra, bool useTrustedHosts = true)
     {
-        string Arguments = "install " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-        string Output = RunProcess(PipExe, Arguments);
-        if (ShowConsole)
-        {
-            Console.WriteLine(Output);
-        }
+        Initialize();
+        var args = new List<string>(lead);
+        args.AddRange(packages); // one argv entry per package: no argument injection through spacing
+        args.AddRange(extra);
+        if (useTrustedHosts && TrustPypiHosts) args.AddRange(TrustedHostArgs);
+        return Log(Execute(_pipExe, args));
     }
 
-    public void PipUpgrade(string[] args)
+    public ProcessResult Run(string script)
     {
-        string Arguments = "install --upgrade " + string.Join(" ", args) + " --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org";
-        string Output = RunProcess(PipExe, Arguments);
-        if (ShowConsole)
-        {
-            Console.WriteLine(Output);
-        }
+        Initialize();
+        // Unique temp file per call, so concurrent runs can't overwrite each other.
+        string path = Path.Combine(_root, $"main-{Guid.NewGuid():N}.py");
+        File.WriteAllText(path, script, new UTF8Encoding(false));
+        try { return Log(Execute(_pythonExe, [path])); }
+        finally { File.Delete(path); }
     }
 
-    public void PipLocal(string[] args)
+    public ProcessResult RunFile(string filePath)
     {
-        string Arguments = "install " + string.Join(" ", args) + " --no-index --find-links /";
-        string Output = RunProcess(PipExe, Arguments);
-        if (ShowConsole)
-        {
-            Console.WriteLine(Output);
-        }
+        Initialize();
+        return Log(Execute(_pythonExe, [filePath]));
     }
 
+    /// <summary>Runs a script and returns <see cref="ProcessResult.Combined"/> text.</summary>
+    public string GetOutput(string script) => Run(script).Combined;
+
+    public string GetFileOutput(string filePath) => RunFile(filePath).Combined;
+
+    /// <summary>Kills the running Python process (and its children), if any.</summary>
     public void Stop()
     {
-        lock (ProcessLock)
+        lock (_lock)
         {
-            if (CurrentProcess != null && !CurrentProcess.HasExited)
+            if (_current is { HasExited: false } p)
             {
-                try
-                {
-                    CurrentProcess.CloseMainWindow();
-                    if (!CurrentProcess.WaitForExit(2000))
-                    {
-                        CurrentProcess.Kill();
-                        CurrentProcess.WaitForExit();
-                    }
-                }
-                catch { }
+                try { p.Kill(entireProcessTree: true); }
+                catch (InvalidOperationException) { }
             }
         }
     }
 
-    public void Run(string Script)
+    ProcessResult Execute(string exe, IEnumerable<string> args)
     {
-        File.WriteAllText(MainPy, Script);
-        string Output = RunProcess(PythonExe, MainPy);
-        Console.WriteLine(Output);
-    }
-
-    public void RunFile(string FilePath)
-    {
-        string Output = RunProcess(PythonExe, FilePath);
-        Console.WriteLine(Output);
-    }
-
-    public string GetOutput(string Script)
-    {
-        File.WriteAllText(MainPy, Script);
-        return RunProcess(PythonExe, MainPy);
-    }
-
-    public string GetFileOutput(string FilePath)
-    {
-        return RunProcess(PythonExe, FilePath);
-    }
-
-    private string RunProcess(string PythonExeFileName, string PythonExeArguments)
-    {
-        using (var Process = new Process())
+        var psi = new ProcessStartInfo(exe)
         {
-            Process.StartInfo = new ProcessStartInfo
-            {
-                FileName = PythonExeFileName,
-                Arguments = PythonExeArguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = ShowConsole
-            };
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
+        };
+        psi.Environment["PYTHONUTF8"] = "1";
+        foreach (string a in args) psi.ArgumentList.Add(a);
 
-            lock (ProcessLock)
-            {
-                CurrentProcess = Process;
-            }
-
-            try
-            {
-                Process.Start();
-
-                var OutputTask = Process.StandardOutput.ReadToEndAsync();
-                var ErrorTask = Process.StandardError.ReadToEndAsync();
-
-                Process.WaitForExit();
-
-                Task.WaitAll(OutputTask, ErrorTask);
-
-                string Output = OutputTask.Result;
-                string Error = ErrorTask.Result;
-
-                if (!string.IsNullOrWhiteSpace(Error))
-                {
-                    return $"{(!string.IsNullOrWhiteSpace(Output) ? Output + Environment.NewLine : string.Empty)}Error Output:{Environment.NewLine}{Error}";
-                }
-                return Output;
-            }
-            catch (Exception e)
-            {
-                return $"Execution failed: {e.Message}";
-            }
-            finally
-            {
-                lock (ProcessLock)
-                {
-                    if (CurrentProcess == Process)
-                    {
-                        CurrentProcess = null;
-                    }
-                }
-            }
+        using var process = new Process { StartInfo = psi };
+        lock (_lock) _current = process;
+        try
+        {
+            process.Start();
+            Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+            Task<string> stderr = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+            return new ProcessResult(process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
         }
+        finally
+        {
+            lock (_lock) { if (ReferenceEquals(_current, process)) _current = null; }
+        }
+    }
+
+    ProcessResult Log(ProcessResult r)
+    {
+        if (_log is not null && !string.IsNullOrWhiteSpace(r.Combined)) _log.WriteLine(r.Combined);
+        return r;
     }
 }

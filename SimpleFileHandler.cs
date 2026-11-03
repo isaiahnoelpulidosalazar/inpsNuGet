@@ -1,167 +1,52 @@
-﻿using System.IO;
 using System.IO.Compression;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace inpsNuGet;
 
-public class SimpleFileHandler
+public static class SimpleFileHandler
 {
-    public static void Write(string FilePath, string Content)
+    public static void Write(string filePath, string content) => File.WriteAllText(filePath, content);
+    public static string Read(string filePath) => File.ReadAllText(filePath);
+    public static void Append(string filePath, string content) => File.AppendAllText(filePath, content);
+
+    /// <summary>Extracts a zip, throwing <see cref="IOException"/> if any entry would land outside the target (Zip Slip).</summary>
+    public static void ExtractZipSafe(string zipPath, string extractPath) =>
+        ZipFile.ExtractToDirectory(zipPath, NormalizeDir(extractPath), overwriteFiles: true);
+
+    /// <summary>
+    /// Copies an embedded resource (matched by file-name suffix, case-insensitive) into <paramref name="targetDirectory"/>
+    /// (current directory if empty). Throws <see cref="FileNotFoundException"/> if the resource doesn't exist.
+    /// </summary>
+    public static void ProjectToLocation(Assembly assembly, string resourceFileName, string targetDirectory = "")
     {
-        File.WriteAllText(FilePath, Content);
+        using Stream source = OpenEmbedded(assembly, resourceFileName);
+        string dir = NormalizeDir(targetDirectory);
+        Directory.CreateDirectory(dir);
+
+        using FileStream target = File.Create(Path.Combine(dir, Path.GetFileName(resourceFileName)));
+        source.CopyTo(target);
     }
 
-    public static string Read(string FilePath)
+    /// <summary>Extracts an embedded zip straight from the assembly stream: no temporary file, nothing to delete.</summary>
+    public static void ExtractEmbeddedZip(Assembly assembly, string resourceFileName, string targetDirectory = "")
     {
-        return File.ReadAllText(FilePath);
+        using Stream source = OpenEmbedded(assembly, resourceFileName);
+        using var archive = new ZipArchive(source, ZipArchiveMode.Read);
+        string dir = NormalizeDir(targetDirectory);
+        Directory.CreateDirectory(dir);
+        archive.ExtractToDirectory(dir, overwriteFiles: true);
     }
 
-    public static void Append(string FilePath, string Content)
+    static string NormalizeDir(string dir) => string.IsNullOrEmpty(dir) ? "." : dir;
+
+    static Stream OpenEmbedded(Assembly assembly, string fileName)
     {
-        File.AppendAllText(FilePath, Content);
-    }
+        ArgumentNullException.ThrowIfNull(assembly);
+        string suffix = "." + Path.GetFileName(fileName);
+        string? name = assembly.GetManifestResourceNames()
+            .FirstOrDefault(n => n.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
-    public static void ExtractZipSafe(string ZipPath, string ExtractPath)
-    {
-        using (var Archive = ZipFile.OpenRead(ZipPath))
-        {
-            foreach (var Entry in Archive.Entries)
-            {
-                string TargetPath = Path.GetFullPath(Path.Combine(ExtractPath, Entry.FullName));
-
-                string? DirectoryPath = Path.GetDirectoryName(TargetPath);
-                if (DirectoryPath != null)
-                {
-                    Directory.CreateDirectory(DirectoryPath);
-                }
-
-                if (!string.IsNullOrEmpty(Entry.Name))
-                {
-                    Entry.ExtractToFile(TargetPath, overwrite: true);
-                }
-            }
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocation(Assembly ExecutingAssembly, string FileName)
-    {
-        try
-        {
-            string ShortFileName = Path.GetFileName(FileName);
-            string? ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
-
-            if (ActualResourceName == null)
-            {
-                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
-            }
-
-            string? DirectoryPath = Path.GetDirectoryName(FileName);
-            if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
-            {
-                Directory.CreateDirectory(DirectoryPath);
-            }
-
-            using (Stream? ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
-            {
-                using (FileStream ProjectFileStream = File.Create(FileName))
-                {
-                    ResourceStream?.CopyTo(ProjectFileStream);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocation(Assembly ExecutingAssembly, string FileName, string FilePath)
-    {
-        try
-        {
-            string ShortFileName = Path.GetFileName(FileName);
-            string? ActualResourceName = ExecutingAssembly.GetManifestResourceNames().FirstOrDefault(name => name.EndsWith("." + ShortFileName, StringComparison.OrdinalIgnoreCase));
-
-            if (ActualResourceName == null)
-            {
-                throw new FileNotFoundException($"Could not find embedded resource ending with '.{ShortFileName}'");
-            }
-
-            if (!string.IsNullOrEmpty(FilePath) && !Directory.Exists(FilePath))
-            {
-                Directory.CreateDirectory(FilePath);
-            }
-
-            using (Stream? ResourceStream = ExecutingAssembly.GetManifestResourceStream(ActualResourceName))
-            {
-                using (FileStream ProjectFileStream = File.Create(Path.Combine(FilePath, Path.GetFileName(FileName))))
-                {
-                    ResourceStream?.CopyTo(ProjectFileStream);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocationThenExtractZip(Assembly ExecutingAssembly, string FileName)
-    {
-        try
-        {
-            ProjectToLocation(ExecutingAssembly, FileName);
-            ExtractZipSafe(FileName, "");
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocationThenExtractZip(Assembly ExecutingAssembly, string FileName, string FilePath)
-    {
-        try
-        {
-            ProjectToLocation(ExecutingAssembly, FileName, FilePath);
-            ExtractZipSafe(FilePath + "\\" + FileName, FilePath);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName)
-    {
-        try
-        {
-            ProjectToLocationThenExtractZip(ExecutingAssembly, FileName);
-            File.Delete(FileName);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ProjectToLocationThenExtractZipThenDelete(Assembly ExecutingAssembly, string FileName, string FilePath)
-    {
-        try
-        {
-            ProjectToLocationThenExtractZip(ExecutingAssembly, FileName, FilePath);
-            File.Delete(FilePath + "\\" + FileName);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Cannot copy project file. Error: {e.Message}");
-        }
+        return (name is null ? null : assembly.GetManifestResourceStream(name))
+            ?? throw new FileNotFoundException($"Embedded resource '*{suffix}' was not found.", fileName);
     }
 }

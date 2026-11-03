@@ -2,91 +2,97 @@ name: Build inpsNuGet
 
 on:
   push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
-  contents: write
+  contents: read
+
+env:
+  PROJECT: inpsNuGet.csproj
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Get Version and Changes
-        id: metadata
+      - name: Read version and release notes
+        id: meta
         shell: bash
         run: |
-          VERSION=$(grep -m 1 "<Version>" inpsNuGet.csproj | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
+          VERSION=$(dotnet msbuild "$PROJECT" -getProperty:Version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          CHANGES=$(awk '
-            BEGIN { found=0 }
-            /\/\/[[:space:]]*changes:/ { found=1; next }
-            found && /\/\/[[:space:]]*-/ {
-              sub(/\/\/[[:space:]]*/, "")
-              print
-            }
-            found && !/\/\/[[:space:]]*-/ { exit }
-          ' Changes.cs)
+          # Notes = lines of the "## [VERSION]" section of CHANGELOG.md
+          awk -v v="$VERSION" '
+            /^## / { if (f) exit; if (index($0, "[" v "]")) { f = 1; next } }
+            f { print }
+          ' CHANGELOG.md | sed '/^[[:space:]]*$/d' > changes.txt
+          [ -s changes.txt ] || echo "- No changes specified." > changes.txt
 
-          if [ -z "$CHANGES" ]; then
-            CHANGES="- No changes specified."
-          fi
+          {
+            echo "Auto-generated release."; echo
+            echo "Version: v$VERSION"; echo
+            echo "Changes:"; cat changes.txt
+          } > release-body.md
 
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "TAG_NAME=inpsNuGet-v$VERSION" >> $GITHUB_ENV
-
-          echo "CHANGES<<EOF" >> $GITHUB_ENV
-          echo "$CHANGES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Build and Pack
+      - name: Restore, build, test, pack
         run: |
-          dotnet restore inpsNuGet.csproj
-          dotnet build inpsNuGet.csproj --configuration Release --no-restore
-          dotnet pack inpsNuGet.csproj --configuration Release --no-build --output nuget/artifacts
+          dotnet restore "$PROJECT"
+          dotnet build "$PROJECT" --configuration Release --no-restore
+          dotnet test tests/inpsNuGet.Tests/inpsNuGet.Tests.csproj --configuration Release
+          dotnet pack "$PROJECT" --configuration Release --no-build --output nuget/artifacts
 
-      - name: Check if tag exists
-        id: tag_check
-        shell: bash
-        run: |
-          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release
-        if: steps.tag_check.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: ${{ env.TAG_NAME }}
-          body: |
-            Auto-generated release.
+          name: package
+          path: |
+            nuget/artifacts/*
+            release-body.md
 
-            Version: v${{ env.VERSION }}
-            Built from latest commit.
+  publish:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: package
 
-            Changes:
-            ${{ env.CHANGES }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish package
-        if: steps.tag_check.outputs.exists == 'false'
+      # NuGet first (idempotent), release second, so a failed run can simply be re-run.
+      - name: Push to NuGet
         shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          ls -l nuget/artifacts/
-          
-          dotnet nuget push nuget/artifacts/*.nupkg \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+          dotnet nuget push "package/nuget/artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: inpsNuGet-v${{ needs.build.outputs.version }}
+          name: inpsNuGet-v${{ needs.build.outputs.version }}
+          body_path: package/release-body.md
+          target_commitish: ${{ github.sha }}

@@ -1,43 +1,55 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+    <LangVersion>12.0</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageId>inpsNuGet</PackageId>
-    <Version>1.2.18</Version>
-    <Authors>Isaiah Noel Pulido Salazar</Authors>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <UseWindowsForms Condition="$(TargetFramework.EndsWith('-windows'))">true</UseWindowsForms>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <PackageId>inpsNuGet</PackageId>
+    <Version>2.0.0</Version>
+    <Authors>Isaiah Noel Pulido Salazar</Authors>
+    <Description>Multipurpose .NET utilities: embedded Python runtime, process/thread helpers, ciphers, sorting algorithms, validation, conversions, geometry and Windows Forms controls.</Description>
+    <PackageTags>utilities;python;cipher;sort;validation;winforms</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Add RepositoryUrl and a license (PackageLicenseExpression or PackageLicenseFile) before publishing. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="inpsNuGetTest/**/*" />
-    <EmbeddedResource Remove="inpsNuGetTest/**/*" />
-    <None Remove="inpsNuGetTest/**/*" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
+  <!-- Keep the test project and build output out of the library. -->
   <ItemGroup>
-    <Compile Remove="inpsNuGetTestForm/**/*" />
-    <EmbeddedResource Remove="inpsNuGetTestForm/**/*" />
-    <None Remove="inpsNuGetTestForm/**/*" />
+    <Compile Remove="tests/**" />
+    <EmbeddedResource Remove="tests/**" />
+    <None Remove="tests/**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="inpsNuGetTestConsole/**/*" />
-    <EmbeddedResource Remove="inpsNuGetTestConsole/**/*" />
-    <None Remove="inpsNuGetTestConsole/**/*" />
+  <!-- WinForms controls only exist in the -windows target (no more empty stub classes). -->
+  <ItemGroup Condition="!$(TargetFramework.EndsWith('-windows'))">
+    <Compile Remove="ClickableElement.cs;VerticalList.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Copy Python.zip and PythonFiles.zip from your v1 repo next to this file. -->
   <ItemGroup>
-    <EmbeddedResource Include="LICENSE" />
-    <EmbeddedResource Include="PythonFiles.zip" />
-    <EmbeddedResource Include="Python.zip" />
+    <EmbeddedResource Include="PythonFiles.zip" Condition="Exists('PythonFiles.zip')" />
+    <EmbeddedResource Include="Python.zip" Condition="Exists('Python.zip')" />
   </ItemGroup>
 </Project>

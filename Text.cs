@@ -1,9 +1,24 @@
 namespace inpsNuGet;
 
-public class Text
+public static class Text
 {
-    public static string GetTextFromDoubleQuotations(string Line)
+    /// <summary>Text between the first and last double quote. Throws <see cref="FormatException"/> if there aren't two.</summary>
+    public static string GetTextFromDoubleQuotations(string line) =>
+        TryGetTextFromDoubleQuotations(line, out string result)
+            ? result
+            : throw new FormatException("Input must contain two double-quote characters.");
+
+    public static bool TryGetTextFromDoubleQuotations(string line, out string result)
     {
-        return Line.Substring(Line.IndexOf('"') + 1, Line.LastIndexOf('"') - Line.IndexOf('"') - 1);
+        ArgumentNullException.ThrowIfNull(line);
+        int first = line.IndexOf('"');
+        int last = line.LastIndexOf('"');
+        if (first < 0 || last <= first)
+        {
+            result = string.Empty;
+            return false;
+        }
+        result = line.Substring(first + 1, last - first - 1);
+        return true;
     }
 }

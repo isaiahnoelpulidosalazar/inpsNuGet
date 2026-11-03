@@ -1,200 +1,75 @@
-﻿using System.Collections;
-using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace inpsNuGet;
 
-public class Check
+/// <summary>Stateless validation and inspection helpers.</summary>
+public static partial class Check
 {
-    public static class Email
+    [GeneratedRegex(@"^(?:09|\+639|639)[0-9]{9}\z", RegexOptions.CultureInvariant)]
+    private static partial Regex PhMobileRegex();
+
+    [GeneratedRegex(@"[\s\-()]")]
+    private static partial Regex FormattingChars();
+
+    public static bool IsAValidPhilippineMobileNumber(string? str) =>
+        str is not null && PhMobileRegex().IsMatch(FormattingChars().Replace(str, ""));
+
+    static bool IsAll(string? s, Func<char, bool> p)
     {
-        static ArrayList ValidDomainNames = new ArrayList();
-        static ArrayList ValidDomainExtensions = new ArrayList();
-        static ArrayList ValidDomains = new ArrayList();
-        static bool UsingFullDomain = false;
-
-        public static void AddValidDomainName(string Str)
-        {
-            ValidDomainNames.Add(Str);
-        }
-
-        public static void AddValidDomainExtension(string Str)
-        {
-            ValidDomainExtensions.Add(Str);
-        }
-        
-        public static void AddValidDomain(string Str)
-        {
-            ValidDomains.Add(Str);
-        }
-
-        public static void ShouldUseFullDomain()
-        {
-            UsingFullDomain = true;
-        }
-
-        public static void ShouldUseFullDomain(bool UseFullDomain)
-        {
-            UsingFullDomain = UseFullDomain;
-        }
-
-        public static bool IsValid(string Str)
-        {
-            if (UsingFullDomain)
-            {
-                try
-                {
-                    string[] Domain = Str.Split('@');
-                    return ValidDomains.Contains(Domain[1]);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                try
-                {
-                    string[] Domain = Str.Split('@');
-                    string DomainName = Domain[1].Split('.')[0];
-                    string DomainExtension = Domain[1].Split('.')[1];
-                    return ValidDomainNames.Contains(DomainName) && ValidDomainExtensions.Contains(DomainExtension);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-        }
+        if (string.IsNullOrEmpty(s)) return false;
+        foreach (char c in s) if (!p(c)) return false;
+        return true;
     }
 
-    public static bool IsAValidPhilippineMobileNumber(string Str)
+    static bool HasAny(string? s, Func<char, bool> p)
     {
-        return Regex.IsMatch(Regex.Replace(Str, @"[\s\-\(\)]", ""), @"^(?:09|\+639|639)\d{9}$");
+        if (s is null) return false;
+        foreach (char c in s) if (p(c)) return true;
+        return false;
     }
 
-    public static bool IsAllNumbers(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(char.IsDigit);
-    }
+    static bool IsSpecial(char c) => char.IsPunctuation(c) || char.IsSymbol(c);
 
-    public static bool HasNumbers(string Str)
-    {
-        return Str?.Any(char.IsDigit) ?? false;
-    }
+    public static bool IsAllNumbers(string? s) => IsAll(s, char.IsDigit);
+    public static bool HasNumbers(string? s) => HasAny(s, char.IsDigit);
+    public static bool IsAllAsciiNumbers(string? s) => IsAll(s, char.IsAsciiDigit);
+    public static bool HasAsciiNumbers(string? s) => HasAny(s, char.IsAsciiDigit);
+    public static bool IsAllSymbols(string? s) => IsAll(s, char.IsSymbol);
+    public static bool HasSymbols(string? s) => HasAny(s, char.IsSymbol);
+    public static bool IsAllPunctuations(string? s) => IsAll(s, char.IsPunctuation);
+    public static bool HasPunctuations(string? s) => HasAny(s, char.IsPunctuation);
+    public static bool IsAllSpecialCharacters(string? s) => IsAll(s, IsSpecial);
+    public static bool HasSpecialCharacters(string? s) => HasAny(s, IsSpecial);
+    public static bool IsAllSpaces(string? s) => IsAll(s, char.IsWhiteSpace);
+    public static bool HasSpaces(string? s) => HasAny(s, char.IsWhiteSpace);
+    public static bool HasNoSpaces(string? s) => !string.IsNullOrEmpty(s) && !HasAny(s, char.IsWhiteSpace);
 
-    public static bool IsAllAsciiNumbers(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(char.IsAsciiDigit);
-    }
+    public static double HowManySecondsLeft(DateTime now, DateTime until) => (until - now).TotalSeconds;
+    public static double HowManyMinutesLeft(DateTime now, DateTime until) => (until - now).TotalMinutes;
+    public static double HowManyHoursLeft(DateTime now, DateTime until) => (until - now).TotalHours;
+    public static double HowManyDaysLeft(DateTime now, DateTime until) => (until - now).TotalDays;
 
-    public static bool HasAsciiNumbers(string Str)
-    {
-        return Str?.Any(char.IsAsciiDigit) ?? false;
-    }
-
-    public static bool IsAllSymbols(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(char.IsSymbol);
-    }
-    
-    public static bool HasSymbols(string Str)
-    {
-        return Str?.Any(char.IsSymbol) ?? false;
-    }
-
-    public static bool IsAllPunctuations(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(char.IsPunctuation);
-    }
-    
-    public static bool HasPunctuations(string Str)
-    {
-        return Str?.Any(char.IsPunctuation) ?? false;
-    }
-
-    public static bool IsAllSpecialCharacters(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(c => char.IsPunctuation(c) || char.IsSymbol(c));
-    }
-
-    public static bool HasSpecialCharacters(string Str)
-    {
-        return Str?.Any(c => char.IsPunctuation(c) || char.IsSymbol(c)) ?? false;
-    }
-
-    public static bool IsAllSpaces(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && Str.All(char.IsWhiteSpace);
-    }
-
-    public static bool HasSpaces(string Str)
-    {
-        return Str?.Any(char.IsWhiteSpace) ?? false;
-    }
-
-    public static bool HasNoSpaces(string Str)
-    {
-        return !string.IsNullOrEmpty(Str) && !Str.Any(char.IsWhiteSpace);
-    }
-
-    public static double HowManySecondsLeft(DateTime now, DateTime until)
-    {
-        return (until - now).TotalSeconds;
-    }
-
-    public static double HowManyMinutesLeft(DateTime now, DateTime until)
-    {
-        return (until - now).TotalMinutes;
-    }
-
-    public static double HowManyHoursLeft(DateTime now, DateTime until)
-    {
-        return (until - now).TotalHours;
-    }
-
-    public static double HowManyDaysLeft(DateTime now, DateTime until)
-    {
-        return (until - now).TotalDays;
-    }
-
-    static readonly HttpClient client = new HttpClient
+    static readonly HttpClient Http = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) })
     {
         Timeout = TimeSpan.FromSeconds(5)
     };
 
-    static async Task CheckConnectionAsync()
+    /// <summary>
+    /// true only if the connectivity endpoint answers 204 (a captive portal's 200 is not "online").
+    /// Returns false on network failure or timeout; cancellation by the caller still throws.
+    /// </summary>
+    public static async Task<bool> HasInternetAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await client.GetAsync("http://clients3.google.com/generate_204");
-
-            if (response.IsSuccessStatusCode)
-            {
-                Console.WriteLine("You have a working internet connection.");
-            }
-            else
-            {
-                Console.WriteLine("No internet access (Server returned an error status).");
-            }
+            using HttpResponseMessage r = await Http
+                .GetAsync("https://connectivitycheck.gstatic.com/generate_204",
+                          HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+            return r.StatusCode == HttpStatusCode.NoContent;
         }
-        catch (HttpRequestException)
-        {
-            Console.WriteLine("No internet access (Failed to reach the test server).");
-        }
-        catch (OperationCanceledException)
-        {
-            Console.WriteLine("No internet access (Connection timed out).");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
-        }
-    }
-
-    public static void CheckConnection()
-    {
-        CheckConnectionAsync().GetAwaiter().GetResult();
+        catch (HttpRequestException) { return false; }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return false; }
     }
 }

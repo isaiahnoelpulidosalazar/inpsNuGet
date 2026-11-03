@@ -2,134 +2,86 @@ using System.ComponentModel;
 
 namespace inpsNuGet;
 
-#if WINDOWS
+/// <summary>A hover/press/toggle-aware clickable row. Windows Forms only (net8.0-windows).</summary>
 [ToolboxItem(true)]
 public class ClickableElement : Panel
 {
-    string Title;
-    Label Label;
-    Action? Event;
-    bool AmIHovered = false, AmIToggled = false;
-    Color ToggledColor = Color.FromArgb(58, 204, 0),
-        ToggledHoverColor = Color.FromArgb(53, 189, 0),
-        ToggledClickedColor = Color.FromArgb(48, 168, 0);
+    static readonly Color ToggledColor = Color.FromArgb(58, 204, 0);
+    static readonly Color ToggledHoverColor = Color.FromArgb(53, 189, 0);
+    static readonly Color ToggledPressedColor = Color.FromArgb(48, 168, 0);
+    static readonly Color PressedColor = Color.FromArgb(175, 175, 175);
 
-    public ClickableElement(string Title)
+    readonly string _title;
+    readonly Label _label;
+    Action? _onClick;
+    bool _hovered, _pressed, _toggled;
+
+    public ClickableElement() : this("Title") { }
+
+    public ClickableElement(string title)
     {
-        this.Title = Title;
-        
+        _title = title;
         Height = 38;
+        Width = 50;
         BorderStyle = BorderStyle.FixedSingle;
         Margin = new Padding(3, 3, 3, 0);
-        BackColor = SystemColors.Control;
         Cursor = Cursors.Hand;
 
-        int InitialWidth = Math.Max(50, ClientSize.Width - 6);
-        Width = InitialWidth;
-
-        Label = new Label
+        _label = new Label
         {
-            Text = string.IsNullOrEmpty(Title) ? "Title" : Title,
+            Text = string.IsNullOrEmpty(title) ? "Title" : title,
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleLeft,
             Padding = new Padding(3, 0, 3, 0),
-            BackColor = SystemColors.Control,
             AutoEllipsis = true,
             Cursor = Cursors.Hand
         };
 
-        Label.MouseEnter += (s, e) =>
+        _label.MouseEnter += (_, _) => { _hovered = true; UpdateVisualState(); };
+        _label.MouseLeave += (_, _) => { _hovered = _pressed = false; UpdateVisualState(); };
+        _label.MouseDown += (_, e) =>
         {
-            AmIHovered = true;
-            if (AmIToggled)
-            {
-                BackColor = ToggledHoverColor;
-                Label.BackColor = ToggledHoverColor;
-            }
-            else
-            {
-                BackColor = Color.LightGray;
-                Label.BackColor = Color.LightGray;
-            }
+            if (e.Button != MouseButtons.Left) return;
+            _pressed = true;
+            UpdateVisualState();
         };
-        Label.MouseLeave += (s, e) =>
+        _label.MouseUp += (_, e) =>
         {
-            AmIHovered = false;
-            if (AmIToggled)
-            {
-                BackColor = ToggledColor;
-                Label.BackColor = ToggledColor;
-            }
-            else
-            {
-                BackColor = SystemColors.Control;
-                Label.BackColor = SystemColors.Control;
-            }
-        };
-        Label.MouseDown += (s, e) =>
-        {
-            if (AmIToggled)
-            {
-                BackColor = ToggledClickedColor;
-                Label.BackColor = ToggledClickedColor;
-            }
-            else
-            {
-                BackColor = Color.FromArgb(175, 175, 175);
-                Label.BackColor = Color.FromArgb(175, 175, 175);
-            }
-        };
-        Label.MouseUp += (s, e) =>
-        {
-            if (AmIToggled)
-            {
-                BackColor = ToggledColor;
-                Label.BackColor = ToggledColor;
-            }
-            else
-            {
-                BackColor = Color.LightGray;
-                Label.BackColor = Color.LightGray;
-            }
-            Event?.Invoke();
+            bool wasPressed = _pressed;
+            _pressed = false;
+            UpdateVisualState();
+            // Fires only for a left press released inside the element.
+            if (wasPressed && _label.ClientRectangle.Contains(e.Location)) _onClick?.Invoke();
         };
 
-        Controls.Add(Label);
+        Controls.Add(_label);
+        UpdateVisualState();
     }
 
-    public ClickableElement SetEvent(Action Event)
+    void UpdateVisualState()
     {
-        this.Event = Event;
-        return this;
+        Color c = (_toggled, _pressed, _hovered) switch
+        {
+            (true, true, _) => ToggledPressedColor,
+            (true, _, true) => ToggledHoverColor,
+            (true, _, _) => ToggledColor,
+            (false, true, _) => PressedColor,
+            (false, _, true) => Color.LightGray,
+            _ => SystemColors.Control
+        };
+        BackColor = c;
+        _label.BackColor = c;
     }
+
+    public ClickableElement SetEvent(Action onClick) { _onClick = onClick; return this; }
 
     public ClickableElement Toggle()
     {
-        AmIToggled = !AmIToggled;
-        if (AmIToggled)
-        {
-            BackColor = AmIHovered ? ToggledHoverColor : ToggledColor;
-            Label.BackColor = AmIHovered ? ToggledHoverColor : ToggledColor;
-        }
-        else
-        {
-            BackColor = AmIHovered ? Color.LightGray : SystemColors.Control;
-            Label.BackColor = AmIHovered ? Color.LightGray : SystemColors.Control;
-        }
-        PerformLayout();
+        _toggled = !_toggled;
+        UpdateVisualState();
         return this;
     }
 
-    public string GetTitle()
-    {
-        return Title;
-    }
-
-    public bool IsToggled()
-    {
-        return AmIToggled;
-    }
+    public string GetTitle() => _title;
+    public bool IsToggled() => _toggled;
 }
-#else
-public class ClickableElement { }
-#endif

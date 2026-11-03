@@ -2,11 +2,12 @@ using System.ComponentModel;
 
 namespace inpsNuGet;
 
-#if WINDOWS
+/// <summary>Vertical, scrollable list of <see cref="ClickableElement"/>. Windows Forms only (net8.0-windows).</summary>
 [ToolboxItem(true)]
 public class VerticalList : FlowLayoutPanel
 {
-    bool IsAdjustingWidths = false;
+    const int WS_HSCROLL = 0x00100000;
+    const int MinItemWidth = 50;
 
     public VerticalList()
     {
@@ -14,162 +15,58 @@ public class VerticalList : FlowLayoutPanel
         AutoScroll = true;
         FlowDirection = FlowDirection.TopDown;
         WrapContents = false;
-        Padding = new Padding(0, 0, 0, 3);
+        Padding = new Padding(0, 0, 0, 6); // replaces the per-item "last item gets a bottom margin" pass
         DoubleBuffered = true;
     }
 
-    protected override System.Windows.Forms.CreateParams CreateParams
+    protected override CreateParams CreateParams
     {
         get
         {
-            System.Windows.Forms.CreateParams cp = base.CreateParams;
-            cp.Style &= ~0x00100000;
+            CreateParams cp = base.CreateParams;
+            cp.Style &= ~WS_HSCROLL; // never show a horizontal scrollbar
             return cp;
         }
     }
 
-    public void AddItem(string Title)
-    {
-        Controls.Add(new ClickableElement(Title));
+    int TargetWidth => Math.Max(MinItemWidth, ClientSize.Width - 6);
 
-        UpdateItemMargins();
-        AdjustItemWidths();
-        PerformLayout();
+    public void AddItem(string title) => AddItem(new ClickableElement(title));
+
+    public void AddItem(string title, Action onClick) => AddItem(new ClickableElement(title).SetEvent(onClick));
+
+    public void AddItem(ClickableElement item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        item.Width = TargetWidth;
+        Controls.Add(item);
 
         if (IsHandleCreated && Visible)
         {
+            PerformLayout();
             ScrollToBottom();
         }
     }
 
-    public void AddItem(string Title, Action Event)
+    public void ScrollToBottom() => AutoScrollPosition = new Point(0, DisplayRectangle.Height);
+
+    protected override void OnClientSizeChanged(EventArgs e)
     {
-        Controls.Add(new ClickableElement(Title).SetEvent(Event));
-
-        UpdateItemMargins();
-        AdjustItemWidths();
-        PerformLayout();
-
-        if (IsHandleCreated && Visible)
-        {
-            ScrollToBottom();
-        }
-    }
-
-    public void AddItem(ClickableElement ClickableElement)
-    {
-        Controls.Add(ClickableElement);
-
-        UpdateItemMargins();
-        AdjustItemWidths();
-        PerformLayout();
-
-        if (IsHandleCreated && Visible)
-        {
-            ScrollToBottom();
-        }
-    }
-
-    public void ScrollToBottom()
-    {
-        AutoScrollPosition = new Point(0, DisplayRectangle.Height);
-    }
-
-    void UpdateItemMargins()
-    {
-        for (int a = 0; a < Controls.Count; a++)
-        {
-            Control Control = Controls[a];
-            bool IsLastItem = (a == Controls.Count - 1);
-
-            int bottomMargin = IsLastItem ? 3 : 0;
-            if (Control.Margin.Bottom != bottomMargin)
-            {
-                Control.Margin = new Padding(3, 3, 3, bottomMargin);
-            }
-        }
-    }
-
-    void AdjustItemWidths()
-    {
-        if (IsAdjustingWidths)
-        {
-            return;
-        }
-
-        IsAdjustingWidths = true;
+        base.OnClientSizeChanged(e);
+        int target = TargetWidth;
 
         SuspendLayout();
-
         try
         {
-            int ClientWidth = ClientSize.Width;
-            int TargetWidth = ClientWidth - 6;
-
-            if (TargetWidth < 50)
-            {
-                TargetWidth = 50;
-            }
-
-            foreach (Control Control in Controls)
-            {
-                if (Control is Panel Panel)
-                {
-                    if (Panel.Width != TargetWidth)
-                    {
-                        Panel.Width = TargetWidth;
-                        AdjustInternalItemControls(Panel, TargetWidth);
-                    }
-                }
-            }
+            foreach (Control c in Controls)
+                if (c.Width != target) c.Width = target;
         }
-        finally
-        {
-            ResumeLayout(true);
-            IsAdjustingWidths = false;
-        }
-    }
-
-    void AdjustInternalItemControls(Panel Panel, int TargetWidth)
-    {
-        Label CurrentLabel = null;
-
-        foreach (Control Control in Panel.Controls)
-        {
-            if (Control is Label Label)
-            {
-                CurrentLabel = Label;
-            }
-        }
-
-        if (CurrentLabel != null)
-        {
-            CurrentLabel.Width = CurrentLabel.Width - 6;
-        }
-    }
-
-    protected override void OnLayout(LayoutEventArgs levent)
-    {
-        UpdateItemMargins();
-        base.OnLayout(levent);
-        AdjustItemWidths();
-    }
-
-    protected override void OnResize(EventArgs eventargs)
-    {
-        base.OnResize(eventargs);
-        AdjustItemWidths();
+        finally { ResumeLayout(true); }
     }
 
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
-        BeginInvoke((MethodInvoker)delegate
-        {
-            ScrollToBottom();
-        });
+        BeginInvoke((MethodInvoker)ScrollToBottom);
     }
 }
-#else
-public class VerticalList { }
-#endif

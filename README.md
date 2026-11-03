@@ -1,359 +1,149 @@
 # inpsNuGet
 
-`inpsNuGet` is a multipurpose .NET utility library providing embedded Python runtime management, threading/process executors, Windows Forms UI controls, sorting algorithms, text ciphers, data conversion helpers, and file system handlers.
+`inpsNuGet` is a multipurpose .NET utility library: an embedded Python runtime manager, process/thread helpers, Windows Forms controls, sorting algorithms, text ciphers, conversions, validation helpers and geometry formulas.
 
-**Namespace:** `inpsNuGet`
+**Namespace:** `inpsNuGet` · **Targets:** `net8.0`, `net8.0-windows` · **Version:** 2.x
 
----
+> Upgrading from 1.x? See [migrating-to-v2.md](migrating-to-v2.md).
 
 ## Installation
 
-### .NET CLI
 ```bash
 dotnet add package inpsNuGet
 ```
 
-### Package Manager
-```powershell
-Install-Package inpsNuGet
-```
+## Python runtime (`PyCS`, Windows only)
 
----
-
-## Table of Contents
-- [Python Runtime Integration (`PyCS`)](#python-runtime-integration-pycs)
-- [Threading & Execution (`Actions`)](#threading--execution-actions)
-- [UI Components (Windows Forms)](#ui-components-windows-forms)
-  - [VerticalList](#verticallist)
-  - [ClickableElement](#clickableelement)
-- [Algorithms & Cryptography](#algorithms--cryptography)
-  - [Cipher](#cipher)
-  - [Sort](#sort)
-- [Validation & Network (`AreaCalculator`, `Check`)](#validation--network-check)
-- [Data Conversion & Formatting (`Convert`, `Text`)](#data-conversion--formatting-convert-text)
-- [File & Embedded Resource I/O (`SimpleFileHandler`)](#file--embedded-resource-io-simplefilehandler)
-
----
-
-## Python Runtime Integration (`PyCS`)
-
-`PyCS` deploys and manages an embedded Python 3.13 runtime directly within a .NET host application, providing pip package management and script execution.
+The embedded runtime is extracted lazily on first use. Failures throw exceptions; results come back as `ProcessResult`.
 
 ```csharp
 using inpsNuGet;
 
-// Initialize embedded Python runtime (default extracted to "Python" folder)
-PyCS py = new PyCS(console: true);
+var py = new PyCS(log: Console.Out);               // extracts to ./Python
+// var py = new PyCS(@"C:\CustomPython", Console.Out);
 
-// Or specify a custom deployment directory
-// PyCS py = new PyCS(console: true, customDir: @"C:\CustomPython");
-
-// Install Pip & Packages
 py.InstallPip();
-py.Pip(new string[] { "requests", "numpy" });
-py.PipUpgrade(new string[] { "requests" });
+py.Pip("requests", "numpy");
+py.PipUpgrade("requests");
+py.PipLocal(@"C:\wheels", "mypackage");            // offline install
 
-// Execute Python Script & Print to Console
-py.Run("print('Hello from Embedded Python!')");
-
-// Execute Python Script File
+ProcessResult r = py.Run("print('Hello from Embedded Python!')");
+Console.WriteLine(r.StandardOutput);
+string text = py.GetOutput("import math; print(math.sqrt(144))");
 py.RunFile("script.py");
-
-// Execute and Capture Stdout/Stderr as a string
-string result = py.GetOutput("import math; print(math.sqrt(144))");
-
-// Terminate running Python process
-py.Stop();
+py.Stop();                                          // kill the running process tree
 ```
 
----
+`py.TrustPypiHosts = true` adds `--trusted-host` for PyPI. It disables TLS verification for those hosts, so only use it behind a TLS-intercepting proxy.
 
-## Threading & Execution (`Actions`)
-
-Provides a task and thread orchestration wrapper for running delegate actions, background worker threads, and external executables.
+## Threading and processes (`Actions`)
 
 ```csharp
-using inpsNuGet;
+new Actions(() => Console.WriteLine("thread pool")).Run();
+new Actions(() => Console.WriteLine("own thread")).RunOnDedicatedThread(doInBackground: true);
 
-// 1. Run action on Task ThreadPool
-Actions taskAction = new Actions(() =>
-{
-    Console.WriteLine("Executing on ThreadPool task...");
-}).Run();
+// Run an executable and get the result (nothing is written to the console):
+ProcessResult result = await Actions.ExecuteAsync("git", ["status", "--short"]);
+Console.WriteLine($"{result.ExitCode}: {result.StandardOutput}");
 
-// Check status
-bool running = taskAction.IsRunning;
-
-// 2. Run action on a dedicated System.Threading.Thread
-Actions threadAction = new Actions(() =>
-{
-    Console.WriteLine("Executing on dedicated thread...");
-}).RunOnDedicatedThread(DoInBackground: true);
-
-// 3. Execute external process asynchronously with argument handling
-Actions exeAction = new Actions();
-exeAction.RunExe("git.exe", "status", "--short");
+// Or fire and track:
+var a = new Actions().RunExe("git", "status");
+await a.RunningTask!;
 ```
 
----
-
-## UI Components (Windows Forms)
-
-> *Target OS: Windows Forms (`net8.0-windows` / `net9.0-windows`)*
-
-### VerticalList & ClickableElement
-
-`VerticalList` is a custom `FlowLayoutPanel` managing dynamically resized, selectable button items (`ClickableElement`) with custom hover, click, and toggle state rendering.
+## Windows Forms controls (`net8.0-windows` only)
 
 ```csharp
-using System.Windows.Forms;
-using inpsNuGet;
+var list = new VerticalList { Dock = DockStyle.Fill };
+list.AddItem("Item 1");
+list.AddItem("Item 2", () => MessageBox.Show("clicked"));
 
-public class MainForm : Form
-{
-    public MainForm()
-    {
-        VerticalList list = new VerticalList
-        {
-            Dock = DockStyle.Fill
-        };
-
-        // Add text item
-        list.AddItem("Item 1");
-
-        // Add item with click callback
-        list.AddItem("Item 2 with Action", () =>
-        {
-            MessageBox.Show("Item 2 clicked!");
-        });
-
-        // Add custom configured ClickableElement
-        ClickableElement customElement = new ClickableElement("Toggleable Item");
-        customElement.SetEvent(() =>
-        {
-            customElement.Toggle();
-            bool isToggled = customElement.IsToggled();
-        });
-
-        list.AddItem(customElement);
-        Controls.Add(list);
-    }
-}
+var toggle = new ClickableElement("Toggleable");
+toggle.SetEvent(() => toggle.Toggle());
+list.AddItem(toggle);
+Controls.Add(list);
 ```
 
----
+## Ciphers
 
-## Algorithms & Cryptography
-
-### Cipher
-
-Classical text encryption ciphers for uppercase Latin alphabetic characters.
+Output is upper-case; non-letters pass through.
 
 ```csharp
-using inpsNuGet;
-
-// Caesar Cipher
-string caesar = Cipher.CaesarCipher("HELLO WORLD", 3);
-// Output: "KHOOR ZRUOG"
-
-// Keyword Substitution Cipher
-string keyword = Cipher.KeywordCipher("HELLO WORLD", "KEYWORD");
-// Output: "AOGGJ UJNGW"
-
-// Giovanni Cipher (Rotated Keyword Cipher)
-string giovanni = Cipher.GiovanniCipher("HELLO WORLD", "KEYWORD", "C");
-// Output: "RYCCH SHLCE"
-
-// Transposition Cipher (Interleaves even/odd characters, strips spaces)
-string transposed = Cipher.TranspositionCipher("HELLO WORLD");
-// Output: "HLOOLELWRD"
+Cipher.CaesarCipher("HELLO WORLD", 3);                       // "KHOOR ZRUOG" (negative shifts work too)
+Cipher.KeywordCipher("HELLO WORLD", "KEYWORD");              // "AOGGJ UJNGW"
+Cipher.GiovanniCipher("HELLO WORLD", "KEYWORD", "C");        // "RYCCH SHLCE"
+Cipher.TranspositionCipher("HELLO WORLD");                   // "HLOOLELWRD"
 ```
 
----
+## Sorting
 
-### Sort
+**Every method returns a new array and never modifies its input.**
 
-A collection of sorting algorithms operating on primitive arrays.
+| `Sort` method | Notes |
+| :--- | :--- |
+| `BubbleSort`, `CocktailShakerSort`, `OddEvenSort`, `SelectionSort`, `InsertionSort`, `ShellSort` | simple / quadratic-ish |
+| `QuickSort` | in-place 3-way, median-of-three |
+| `MergeSort` | stable |
+| `HeapSort` | in-place heap |
+| `IntroSort` | quicksort + heapsort fallback + insertion sort |
+| `FrameworkSort` | `Array.Sort` on a copy |
+| `CountingSort` | negatives OK; value range capped at 2^24 |
+| `BucketSortUniform(double[])` | values in [0, 1) |
+| `PatienceSort` | piles + k-way merge |
 
-| Algorithm | Method Signature | Behavior |
-| :--- | :--- | :--- |
-| **Bubble Sort** | `Sort.BubbleSort(int[] arr)` | In-place |
-| **Cocktail Shaker Sort** | `Sort.CocktailShakerSort(int[] arr)` | In-place |
-| **Odd-Even Sort** | `Sort.OddEvenSort(int[] arr)` | In-place |
-| **Selection Sort** | `Sort.SelectionSort(int[] arr)` | In-place |
-| **Insertion Sort** | `Sort.InsertionSort(int[] arr)` | In-place |
-| **Shell Sort** | `Sort.ShellSort(int[] arr)` | In-place |
-| **Quick Sort** | `Sort.QuickSort(int[] arr)` | Returns new array |
-| **Merge Sort** | `Sort.MergeSort(int[] arr)` | Returns new array |
-| **Heap Sort** | `Sort.HeapSort(int[] arr)` | Priority queue backed |
-| **Intro Sort** | `Sort.IntroSort(int[] arr)` | Hybrid Quicksort / Heapsort |
-| **Tim Sort** | `Sort.TimSort(int[] arr)` | Array.Sort clone |
-| **Counting Sort** | `Sort.CountingSort(int[] arr)` | Non-negative integers |
-| **Bucket Sort** | `Sort.BucketSortUniform(double[] arr)` | Values in range $[0.0, 1.0)$ |
-| **Pigeonhole Sort** | `Sort.PigeonholeSort(int[] arr)` | Integer range mapping |
-| **Tree Sort** | `Sort.TreeSort(int[] arr)` | Binary search tree traversal |
-| **Patience Sorting** | `Sort.PatienceSorting(int[] arr)` | Pile sort via binary search |
-| **Bogo Sort** | `Sort.BogoSort(int[] arr)` | Randomized shuffle sort |
-| **Bead Sort** | `Sort.BeadSort(int[] arr)` | Gravity sort (non-negative integers) |
+`EducationalSort`: `BogoSort(arr, cancellationToken)`, `BeadSort` (non-negative), `TreeSort` (unbalanced BST).
 
 ```csharp
-int[] numbers = new int[] { 5, 2, 9, 1, 5, 6 };
-int[] sorted = Sort.QuickSort(numbers);
-
-double[] doubles = new double[] { 0.89, 0.56, 0.65, 0.12, 0.66 };
-double[] sortedDoubles = Sort.BucketSortUniform(doubles);
+int[] sorted = Sort.QuickSort([5, 2, 9, 1, 5, 6]);
 ```
 
----
-
-## Validation & Network (`AreaCalculator`, `Check`)
-
-### AreaCalculator
-
-Geometric calculations for 2D shapes and 3D surface areas.
+## Validation (`Check`, `EmailDomainValidator`)
 
 ```csharp
-using inpsNuGet;
+var emails = new EmailDomainValidator()
+    .AddDomainName("gmail").AddDomainExtension("com");
+emails.IsValid("test@gmail.com");                  // true (case-insensitive)
 
-// --- 2D Shapes ---
-AreaCalculator.SquareArea(4.0);                   // 16.0
-AreaCalculator.RectangleArea(4.0, 5.0);           // 20.0
-AreaCalculator.TriangleArea(10.0, 4.0);           // 20.0
-AreaCalculator.CircleArea(5.0);                   // 78.54
-AreaCalculator.SectorArea(5.0, 60.0);             // 13.09
-AreaCalculator.SegmentArea(5.0, 60.0);            // 2.26
+var full = new EmailDomainValidator { UseFullDomain = true }.AddDomain("company.co.uk");
+full.IsValid("user@company.co.uk");                // true
 
-// Polygon (Shoelace Formula)
-var vertices = new List<(double X, double Y)> { (0,0), (4,0), (4,3), (0,3) };
-AreaCalculator.PolygonShoelaceArea(vertices);    // 12.0
+Check.IsAValidPhilippineMobileNumber("+639171234567");
+Check.IsAllNumbers("12345"); Check.HasSymbols("price: $5"); Check.HasNoSpaces("abc");
+Check.HowManyHoursLeft(DateTime.Now, DateTime.Now.AddHours(2.5));
 
-// --- 3D Surface Areas ---
-AreaCalculator.CubeSurfaceArea(3.0);              // 54.0
-AreaCalculator.CylinderSurfaceArea(3.0, 10.0);   // 245.04
-AreaCalculator.SphereSurfaceArea(3.0);            // 113.10
-
+bool online = await Check.HasInternetAsync();      // true only on HTTP 204
 ```
 
-### Check
+## Conversions (`StringConvert`, `Text`)
+
 ```csharp
-using inpsNuGet;
+StringConvert.Reverse("hello");                     // "olleh"
+StringConvert.ToBase64("Sample");  StringConvert.FromBase64(b64);
+StringConvert.ToHex("hello");                       // "68656C6C6F" (UTF-8 bytes)
+StringConvert.ToBinary("hello");                    // 8 bits per UTF-8 byte
+StringConvert.ToDouble("3.1415");                   // invariant culture
 
-// --- Email Validation ---
-// Split Mode (Name and Extension configured separately)
-Check.Email.AddValidDomainName("gmail");
-Check.Email.AddValidDomainExtension("com");
-Check.Email.ShouldUseFullDomain(false);
-bool isValidSplit = Check.Email.IsValid("test@gmail.com"); // true
-
-// Full Domain Mode
-Check.Email.AddValidDomain("company.co.uk");
-Check.Email.ShouldUseFullDomain(true);
-bool isValidFull = Check.Email.IsValid("user@company.co.uk"); // true
-
-
-// --- Pattern & Character Checks ---
-Check.IsAValidPhilippineMobileNumber("+639171234567"); // true
-Check.IsAValidPhilippineMobileNumber("09171234567");    // true
-
-Check.IsAllNumbers("12345");          // true
-Check.HasNumbers("abc1");             // true
-Check.IsAllAsciiNumbers("123");       // true
-Check.HasAsciiNumbers("a1");          // true
-
-Check.IsAllSymbols("$$$");            // true
-Check.HasSymbols("price: $5");        // true
-Check.IsAllPunctuations("...");       // true
-Check.HasPunctuations("Hello!");      // true
-Check.IsAllSpecialCharacters("@#$!"); // true
-Check.HasSpecialCharacters("Test#");  // true
-
-Check.IsAllSpaces("   ");             // true
-Check.HasSpaces("Hello World");       // true
-Check.HasNoSpaces("NoSpacesHere");    // true
-
-
-// --- Time Remaining Calculations ---
-DateTime now = DateTime.Now;
-DateTime target = now.AddHours(2.5);
-
-double sec  = Check.HowManySecondsLeft(now, target); // ~9000.0
-double min  = Check.HowManyMinutesLeft(now, target); // ~150.0
-double hrs  = Check.HowManyHoursLeft(now, target);   // ~2.5
-double days = Check.HowManyDaysLeft(now, target);    // ~0.104
-
-
-// --- Connectivity Check ---
-// Sends a request to Google generate_204 endpoint and logs status to console
-Check.CheckConnection();
+Text.GetTextFromDoubleQuotations("say \"hi\" now"); // "hi" (throws FormatException if no pair of quotes)
+Text.TryGetTextFromDoubleQuotations(line, out var inner);
 ```
 
----
+## Geometry (`AreaCalculator`)
 
-## Data Conversion & Formatting (`Convert`, `Text`)
-
-### Convert
 ```csharp
-using inpsNuGet;
-
-// String Manipulation
-string reversed = Convert.Reverse("hello"); // "olleh"
-
-// Base64
-string b64 = Convert.ToBase64("Sample");
-string fromB64 = Convert.FromBase64(b64);
-
-// Byte Array
-byte[] bytes = Convert.ToByteArray("Sample");
-string fromBytes = Convert.FromByteArray(bytes);
-
-// Hexadecimal
-string hex = Convert.ToHex("hello"); // "68656C6C6F"
-string fromHex = Convert.FromHex(hex); // "hello"
-
-// Binary
-string bin = Convert.ToBinary("hello"); // "0110100001100101011011000110110001101111"
-string fromBin = Convert.FromBinary(bin); // "hello"
-
-// Numeric Parsing
-int iVal    = Convert.ToInt("42");
-double dVal = Convert.ToDouble("3.1415");
-long lVal   = Convert.ToLong("9999999999");
-float fVal  = Convert.ToFloat("1.25");
+AreaCalculator.CircleArea(5.0);                     // 78.54
+AreaCalculator.PolygonShoelaceArea([(0, 0), (4, 0), (4, 3), (0, 3)]); // 12.0
+AreaCalculator.SphereSurfaceArea(3.0);              // 113.10
 ```
 
-### Text
-```csharp
-using inpsNuGet;
-
-// Extracts substring contained between double quotation marks
-string extracted = Text.GetTextFromDoubleQuotations("The message is \"Welcome User\" today.");
-// Output: "Welcome User"
-```
-
----
-
-## File & Embedded Resource I/O (`SimpleFileHandler`)
-
-Utilities for file access, safe zip extraction, and extracting embedded assembly resources to disk.
+## Files and embedded resources (`SimpleFileHandler`)
 
 ```csharp
-using System.Reflection;
-using inpsNuGet;
+SimpleFileHandler.Write("o.txt", "x"); SimpleFileHandler.Append("o.txt", "y"); SimpleFileHandler.Read("o.txt");
 
-// Basic File I/O
-SimpleFileHandler.Write("output.txt", "Initial content");
-SimpleFileHandler.Append("output.txt", "\nAppended content");
-string content = SimpleFileHandler.Read("output.txt");
+// Throws IOException on Zip Slip entries
+SimpleFileHandler.ExtractZipSafe("archive.zip", @"C:\Out");
 
-// Safe Zip Extraction (with automatic folder creation and path traversal protection)
-SimpleFileHandler.ExtractZipSafe("archive.zip", @"C:\ExtractedFiles");
-
-// --- Embedded Resource Projection ---
-Assembly assembly = Assembly.GetExecutingAssembly();
-
-// 1. Extract embedded resource matching file name to target path
-SimpleFileHandler.ProjectToLocation(assembly, "config.json", @"C:\AppConfig");
-
-// 2. Extract embedded zip resource, extract contents, then delete original zip
-SimpleFileHandler.ProjectToLocationThenExtractZipThenDelete(assembly, "payload.zip", @"C:\AppPayload");
+var asm = Assembly.GetExecutingAssembly();
+SimpleFileHandler.ProjectToLocation(asm, "config.json", @"C:\AppConfig");
+SimpleFileHandler.ExtractEmbeddedZip(asm, "payload.zip", @"C:\AppPayload"); // no temp file
 ```

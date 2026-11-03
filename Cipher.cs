@@ -1,114 +1,83 @@
+using System.Text;
+
 namespace inpsNuGet;
 
-public class Cipher
+/// <summary>Classical ciphers over A-Z. Output is upper-case; non-letters pass through unchanged.</summary>
+public static class Cipher
 {
-    const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const string Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    /// <summary>Removes spaces, upper-cases, then writes even-indexed characters followed by odd-indexed ones.</summary>
     public static string TranspositionCipher(string text)
     {
-        text = text.Replace(" ", "");
-        string temp = "";
-        string temp1 = "";
-        int counter = 0;
-        while (counter < text.Length)
+        ArgumentNullException.ThrowIfNull(text);
+        string s = text.Replace(" ", "").ToUpperInvariant();
+
+        return string.Create(s.Length, s, static (dest, src) =>
         {
-            if (counter % 2 == 0)
-                temp += text.ToUpper()[counter].ToString();
-            else
-                temp1 += text.ToUpper()[counter].ToString();
-            counter++;
-        }
-        return temp + temp1;
+            int pos = 0;
+            for (int i = 0; i < src.Length; i += 2) dest[pos++] = src[i];
+            for (int i = 1; i < src.Length; i += 2) dest[pos++] = src[i];
+        });
     }
 
-    public static string GiovanniCipher(string text, string keyword, string keyLetter)
-    {
-        string temp = "";
-        string temp1 = "";
-        string temp2 = "";
-        string cipher = "";
-        foreach (char c in keyword.ToUpper())
-        {
-            if (!temp.Contains(c.ToString()))
-                temp += c;
-        }
-        temp1 = temp;
-        foreach (char c in alphabet)
-        {
-            if (!temp1.Contains(c.ToString()))
-                temp1 += c;
-        }
-        int keyIndex = alphabet.IndexOf(keyLetter.ToUpper());
-        for (int a = temp1.Length - keyIndex; a < temp1.Length; a++)
-            temp2 += temp1[a];
-        for (int a = 0; a < temp1.Length - keyIndex; a++)
-            temp2 += temp1[a];
-        foreach (char c in text.ToUpper())
-        {
-            if (c == ' ')
-                cipher += " ";
-            else if (!alphabet.Contains(c.ToString()))
-                cipher += c;
-            else
-            {
-                int b = alphabet.IndexOf(c);
-                cipher += temp2[b];
-            }
-        }
-        return cipher;
-    }
-
-    public static string KeywordCipher(string text, string keyword)
-    {
-        string temp = "";
-        string temp1 = "";
-        string cipher = "";
-        foreach (char c in keyword.ToUpper())
-        {
-            if (!temp.Contains(c.ToString()))
-                temp += c;
-        }
-        temp1 = temp;
-        foreach (char c in alphabet)
-        {
-            if (!temp1.Contains(c.ToString()))
-                temp1 += c;
-        }
-        foreach (char c in text.ToUpper())
-        {
-            if (c == ' ')
-                cipher += " ";
-            else if (!alphabet.Contains(c.ToString()))
-                cipher += c;
-            else
-            {
-                int b = alphabet.IndexOf(c);
-                cipher += temp1[b];
-            }
-        }
-        return cipher;
-    }
-    
+    /// <summary>Caesar shift. Any integer shift (negative or > 26) is accepted.</summary>
     public static string CaesarCipher(string text, int shift)
     {
-        string temp = "";
-        string cipher = "";
-        for (int a = shift; a < alphabet.Length; a++)
-            temp += alphabet[a];
-        for (int a = 0; a < shift; a++)
-            temp += alphabet[a];
-        foreach (char c in text.ToUpper())
+        int k = ((shift % 26) + 26) % 26;
+        return Substitute(text, Rotate(Alphabet, k));
+    }
+
+    public static string KeywordCipher(string text, string keyword) =>
+        Substitute(text, BuildKeywordAlphabet(keyword));
+
+    /// <param name="keyLetter">A letter A-Z; the keyword alphabet is rotated right by its alphabet index.</param>
+    public static string GiovanniCipher(string text, string keyword, string keyLetter)
+    {
+        if (string.IsNullOrEmpty(keyLetter))
+            throw new ArgumentException("keyLetter must be a letter A-Z.", nameof(keyLetter));
+
+        int keyIndex = Alphabet.IndexOf(char.ToUpperInvariant(keyLetter[0]));
+        if (keyIndex < 0)
+            throw new ArgumentException("keyLetter must be a letter A-Z.", nameof(keyLetter));
+
+        return Substitute(text, Rotate(BuildKeywordAlphabet(keyword), (26 - keyIndex) % 26));
+    }
+
+    static string Substitute(string text, string map)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return string.Create(text.Length, (text, map), static (dest, state) =>
         {
-            if (c == ' ')
-                cipher += " ";
-            else if (!alphabet.Contains(c.ToString()))
-                cipher += c;
-            else
+            (string src, string table) = state;
+            for (int i = 0; i < src.Length; i++)
             {
-                int b = alphabet.IndexOf(c);
-                cipher += temp[b];
+                char c = char.ToUpperInvariant(src[i]);
+                dest[i] = c is >= 'A' and <= 'Z' ? table[c - 'A'] : c;
+            }
+        });
+    }
+
+    static string Rotate(string s, int left) => string.Concat(s.AsSpan(left), s.AsSpan(0, left));
+
+    static string BuildKeywordAlphabet(string keyword)
+    {
+        ArgumentNullException.ThrowIfNull(keyword);
+        var sb = new StringBuilder(26);
+        Span<bool> seen = stackalloc bool[26];
+
+        foreach (char raw in keyword)
+        {
+            char c = char.ToUpperInvariant(raw);
+            if (c is >= 'A' and <= 'Z' && !seen[c - 'A'])
+            {
+                seen[c - 'A'] = true;
+                sb.Append(c);
             }
         }
-        return cipher;
+        for (char c = 'A'; c <= 'Z'; c++)
+            if (!seen[c - 'A']) sb.Append(c);
+
+        return sb.ToString();
     }
 }
