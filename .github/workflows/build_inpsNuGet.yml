@@ -68,7 +68,8 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write   # create the GitHub release
+      id-token: write   # lets GitHub issue the OIDC token that NuGet/login exchanges for an API key
     steps:
       - uses: actions/setup-dotnet@v4
         with:
@@ -79,10 +80,18 @@ jobs:
           path: package
 
       # NuGet first (idempotent), release second, so a failed run can simply be re-run.
+      # Trusted Publishing: exchange GitHub's OIDC token for a short-lived, single-use API key.
+      # Keep this step directly before the push (the key expires in about an hour).
+      - name: NuGet login (OIDC -> temporary API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet
         shell: bash
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           dotnet nuget push "package/nuget/artifacts/*.nupkg" \
             --api-key "$NUGET_API_KEY" \
