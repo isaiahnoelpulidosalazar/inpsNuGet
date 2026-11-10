@@ -15,20 +15,20 @@ public sealed class Actions
 
     public Actions(Action action) => _action = action ?? throw new ArgumentNullException(nameof(action));
 
-    public Actions Run()
+    public void Run()
     {
         Volatile.Write(ref _runningTask, Task.Run(_action));
-        return this;
+        RunningTask?.Wait();
     }
 
     /// <summary>Starts an executable; the result is available through <see cref="RunningTask"/> (faults on failure).</summary>
-    public Actions RunExe(string filePath, params string[] fileArguments)
+    public void RunExe(string filePath, params string[] fileArguments)
     {
         Volatile.Write(ref _runningTask, ExecuteAsync(filePath, fileArguments));
-        return this;
+        RunningTask?.Wait();
     }
 
-    public Actions RunOnDedicatedThread(bool doInBackground = true)
+    public void RunOnDedicatedThread(bool doInBackground = true)
     {
         // RunContinuationsAsynchronously: awaiters must not run inline on the dedicated thread.
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -41,7 +41,7 @@ public sealed class Actions
 
         Volatile.Write(ref _runningTask, tcs.Task);
         thread.Start();
-        return this;
+        RunningTask?.Wait();
     }
 
     /// <summary>Runs an executable and returns its exit code and captured output. Never writes to the console.</summary>
