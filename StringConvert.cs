@@ -58,7 +58,6 @@ public static class StringConvert
         return Encoding.UTF8.GetString(bytes);
     }
 
-    // Invariant culture: "3.14" parses identically on every machine.
     public static int ToInt(string s) => int.Parse(s, CultureInfo.InvariantCulture);
     public static long ToLong(string s) => long.Parse(s, CultureInfo.InvariantCulture);
     public static float ToFloat(string s) => float.Parse(s, CultureInfo.InvariantCulture);

@@ -15,7 +15,7 @@ public class VerticalList : FlowLayoutPanel
         AutoScroll = true;
         FlowDirection = FlowDirection.TopDown;
         WrapContents = false;
-        Padding = new Padding(0, 0, 0, 6); // replaces the per-item "last item gets a bottom margin" pass
+        Padding = new Padding(0, 0, 0, 6);
         DoubleBuffered = true;
     }
 
@@ -24,7 +24,7 @@ public class VerticalList : FlowLayoutPanel
         get
         {
             CreateParams cp = base.CreateParams;
-            cp.Style &= ~WS_HSCROLL; // never show a horizontal scrollbar
+            cp.Style &= ~WS_HSCROLL;
             return cp;
         }
     }

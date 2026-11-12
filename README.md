@@ -4,8 +4,6 @@
 
 **Namespace:** `inpsNuGet` · **Targets:** `net8.0`, `net8.0-windows` · **Version:** 2.x
 
-> Upgrading from 1.x? See [migrating-to-v2.md](migrating-to-v2.md).
-
 ## Installation
 
 ```bash

@@ -45,12 +45,10 @@ public static class EducationalSort
             throw new ArgumentException($"Largest value exceeds the supported maximum ({MaxBeadColumns:N0}).", nameof(arr));
 
         int n = arr.Length;
-        // After gravity, column j holds columnBeads[j] beads stacked at the bottom.
         var columnBeads = new int[max];
         foreach (int x in arr)
             for (int j = 0; j < x; j++) columnBeads[j]++;
 
-        // Row i (0 = top) has a bead in column j when i >= n - columnBeads[j].
         var result = new int[n];
         for (int i = 0; i < n; i++)
         {

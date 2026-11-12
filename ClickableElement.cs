@@ -50,7 +50,6 @@ public class ClickableElement : Panel
             bool wasPressed = _pressed;
             _pressed = false;
             UpdateVisualState();
-            // Fires only for a left press released inside the element.
             if (wasPressed && _label.ClientRectangle.Contains(e.Location)) _onClick?.Invoke();
         };
 

@@ -19,8 +19,6 @@ public static class Sort
         return (int[])a.Clone();
     }
 
-    // ---- Simple O(n^2) sorts -------------------------------------------------
-
     public static int[] BubbleSort(int[] arr)
     {
         int[] a = Copy(arr);
@@ -115,8 +113,6 @@ public static class Sort
         return a;
     }
 
-    // ---- O(n log n) sorts ----------------------------------------------------
-
     /// <summary>In-place 3-way quicksort (median-of-three pivot); fast on inputs with many duplicates.</summary>
     public static int[] QuickSort(int[] arr)
     {
@@ -137,7 +133,6 @@ public static class Sort
                 else if (a[i] > pivot) Swap(a, i, gt--);
                 else i++;
             }
-            // Recurse into the smaller side, loop on the larger: stack depth stays O(log n).
             if (lt - lo < hi - gt) { QuickRange(a, lo, lt - 1); lo = gt + 1; }
             else { QuickRange(a, gt + 1, hi); hi = lt - 1; }
         }
@@ -244,8 +239,6 @@ public static class Sort
         Array.Sort(a);
         return a;
     }
-
-    // ---- Non-comparison sorts ------------------------------------------------
 
     /// <summary>Counting sort. Negative values are supported; throws if (max - min + 1) exceeds 2^24.</summary>
     public static int[] CountingSort(int[] arr)

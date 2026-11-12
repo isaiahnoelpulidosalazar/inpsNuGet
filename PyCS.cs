@@ -86,7 +86,7 @@ public sealed class PyCS
     {
         Initialize();
         var args = new List<string>(lead);
-        args.AddRange(packages); // one argv entry per package: no argument injection through spacing
+        args.AddRange(packages);
         args.AddRange(extra);
         if (useTrustedHosts && TrustPypiHosts) args.AddRange(TrustedHostArgs);
         return Log(Execute(_pipExe, args));
@@ -95,7 +95,6 @@ public sealed class PyCS
     public ProcessResult Run(string script)
     {
         Initialize();
-        // Unique temp file per call, so concurrent runs can't overwrite each other.
         string path = Path.Combine(_root, $"main-{Guid.NewGuid():N}.py");
         File.WriteAllText(path, script, new UTF8Encoding(false));
         try { return Log(Execute(_pythonExe, [path])); }

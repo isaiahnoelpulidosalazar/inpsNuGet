@@ -30,7 +30,6 @@ public sealed class Actions
 
     public void RunOnDedicatedThread(bool doInBackground = true)
     {
-        // RunContinuationsAsynchronously: awaiters must not run inline on the dedicated thread.
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
         {
@@ -63,7 +62,6 @@ public sealed class Actions
         using var process = new Process { StartInfo = psi };
         if (!process.Start()) throw new InvalidOperationException($"Could not start '{filePath}'.");
 
-        // Read both pipes concurrently to avoid the full-pipe deadlock.
         Task<string> stdout = process.StandardOutput.ReadToEndAsync(cancellationToken);
         Task<string> stderr = process.StandardError.ReadToEndAsync(cancellationToken);
 
