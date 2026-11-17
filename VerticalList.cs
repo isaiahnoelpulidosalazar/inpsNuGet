@@ -50,6 +50,8 @@ public class VerticalList : FlowLayoutPanel
 
     public void ScrollToBottom() => AutoScrollPosition = new Point(0, DisplayRectangle.Height);
 
+    public void ScrollToTop() => AutoScrollPosition = new Point(0, 0);
+
     protected override void OnClientSizeChanged(EventArgs e)
     {
         base.OnClientSizeChanged(e);

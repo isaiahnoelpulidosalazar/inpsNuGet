@@ -15,20 +15,24 @@ public sealed class Actions
 
     public Actions(Action action) => _action = action ?? throw new ArgumentNullException(nameof(action));
 
-    public void Run()
+    /// <summary>Runs the action on the thread pool and blocks until it finishes. Rethrows the original exception on failure.</summary>
+    public Actions Run()
     {
         Volatile.Write(ref _runningTask, Task.Run(_action));
-        RunningTask?.Wait();
+        WaitForCurrent();
+        return this;
     }
 
-    /// <summary>Starts an executable; the result is available through <see cref="RunningTask"/> (faults on failure).</summary>
-    public void RunExe(string filePath, params string[] fileArguments)
+    /// <summary>Runs an executable and blocks until it exits (faults on failure).</summary>
+    public Actions RunExe(string filePath, params string[] fileArguments)
     {
         Volatile.Write(ref _runningTask, ExecuteAsync(filePath, fileArguments));
-        RunningTask?.Wait();
+        WaitForCurrent();
+        return this;
     }
 
-    public void RunOnDedicatedThread(bool doInBackground = true)
+    /// <summary>Runs the action on a dedicated thread and blocks until it finishes. Rethrows the original exception on failure.</summary>
+    public Actions RunOnDedicatedThread(bool doInBackground = true)
     {
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -40,8 +44,12 @@ public sealed class Actions
 
         Volatile.Write(ref _runningTask, tcs.Task);
         thread.Start();
-        RunningTask?.Wait();
+        WaitForCurrent();
+        return this;
     }
+
+    // GetAwaiter().GetResult() rethrows the original exception instead of wrapping it in an AggregateException.
+    void WaitForCurrent() => RunningTask?.GetAwaiter().GetResult();
 
     /// <summary>Runs an executable and returns its exit code and captured output. Never writes to the console.</summary>
     public static async Task<ProcessResult> ExecuteAsync(
