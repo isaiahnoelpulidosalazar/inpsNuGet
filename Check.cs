@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text.RegularExpressions;
 
 namespace inpsNuGet;
@@ -49,27 +48,4 @@ public static partial class Check
     public static double HowManyMinutesLeft(DateTime now, DateTime until) => (until - now).TotalMinutes;
     public static double HowManyHoursLeft(DateTime now, DateTime until) => (until - now).TotalHours;
     public static double HowManyDaysLeft(DateTime now, DateTime until) => (until - now).TotalDays;
-
-    static readonly HttpClient Http = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) })
-    {
-        Timeout = TimeSpan.FromSeconds(5)
-    };
-
-    /// <summary>
-    /// true only if the connectivity endpoint answers 204 (a captive portal's 200 is not "online").
-    /// Returns false on network failure or timeout; cancellation by the caller still throws.
-    /// </summary>
-    public static async Task<bool> HasInternetAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            using HttpResponseMessage r = await Http
-                .GetAsync("https://connectivitycheck.gstatic.com/generate_204",
-                          HttpCompletionOption.ResponseHeadersRead, cancellationToken)
-                .ConfigureAwait(false);
-            return r.StatusCode == HttpStatusCode.NoContent;
-        }
-        catch (HttpRequestException) { return false; }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return false; }
-    }
 }
